@@ -1,0 +1,114 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest 
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    
+    - name: Restore dependencies
+      run: dotnet restore TourPlanner.sln
+    
+    - name: Build solution
+      run: dotnet build TourPlanner.sln --no-restore --configuration Release
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: built-solution
+        path: |
+          **/bin/Release/**
+          **/obj/Release/**
+        retention-days: 1
+
+  test:
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: built-solution
+        
+    - name: Run tests
+      run: dotnet test TourPlanner.Test/TourPlanner.Test.csproj --no-build --configuration Release
+
+  create-release:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout full repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: built-solution
+        path: release-artifacts
+    
+    - name: Copy Database and README to release artifacts
+      run: |
+        New-Item -Path "release-package" -ItemType Directory -Force
+        Copy-Item -Path "Database" -Destination "release-package\Database" -Recurse
+        Copy-Item -Path "README.md" -Destination "release-package\README.md"
+        Copy-Item -Path "release-artifacts\*" -Destination "release-package\" -Recurse
+        
+    - name: Zip release artifacts
+      run: |
+        Compress-Archive -Path release-package\* -DestinationPath TourPlanner-latest.zip -Force
+    
+    - name: Get current date
+      id: date
+      run: echo "date=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> $env:GITHUB_OUTPUT
+        
+    - name: Delete existing release
+      uses: dev-drprasad/delete-tag-and-release@v1.0
+      with:
+        tag_name: latest
+        delete_release: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: latest
+        name: TourPlanner Latest Build
+        body: |
+          Latest successful build of TourPlanner
+          Build from branch: ${{ github.ref_name }}
+          Created: ${{ steps.date.outputs.date }}
+        files: TourPlanner-latest.zip
+        draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

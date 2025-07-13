@@ -1,0 +1,99 @@
+﻿<Window x:Class="TourPlanner.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TourPlanner.UI.Views"
+        mc:Ignorable="d"
+        Title="TourPlanner"
+        WindowState="Maximized"
+        ResizeMode="CanResize"
+        Icon="./resources/icon.png"
+        Background="#121214">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Menu Bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Search Bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Tour Section -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="{Binding TourListViewModel.IsAddingTour, Converter={StaticResource BooleanToGridLengthConverter}}"/>
+            <ColumnDefinition Width="{Binding TourListViewModel.IsEditingTour, Converter={StaticResource BooleanToGridLengthConverter}}"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="{Binding TourLogsViewModel.IsAddingTourLog, Converter={StaticResource BooleanToGridLengthConverter}}"/>
+            <ColumnDefinition Width="{Binding TourLogsViewModel.IsEditingTourLog, Converter={StaticResource BooleanToGridLengthConverter}}"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Menu Bar -->
+        <local:MenuBarView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="6" DataContext="{Binding MenuBarViewModel}"/>
+
+        <!-- Search Bar -->
+        <local:SearchView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="6" DataContext="{Binding SearchViewModel}"/>
+
+        <!-- Tour List Section -->
+        <local:TourListView x:Name="TourListView" Grid.Row="2" Grid.Column="0" DataContext="{Binding TourListViewModel}"/>
+
+        <!-- Add new Tour Forms with content control -->
+        <ContentControl Grid.Column="1" Grid.Row="2" x:Name="AddNewTourView"
+                        Content="{Binding AddNewTourViewModel}"
+                        Visibility="{Binding TourListViewModel.IsAddingTour, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <local:AddNewTourView />
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
+        <!-- Edit Tour Forms Section -->
+        <ContentControl Grid.Column="2" Grid.Row="2" x:Name="EditTourView"
+                        Content="{Binding EditTourViewModel}"
+                        Visibility="{Binding TourListViewModel.IsEditingTour, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <local:EditTourView />
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
+        <Grid Grid.Column="3" Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tour Info Section -->
+            <local:TourInfoView x:Name="TourInfoView" Grid.Row="0" DataContext="{Binding TourInfoViewModel}"/>
+            <!-- Tour Logs Section -->
+            <local:TourLogsView x:Name="TourLogsView" Grid.Row="1" DataContext="{Binding TourLogsViewModel}"/>
+        </Grid>
+
+        <!-- Add new Tour Log Forms -->
+        <ContentControl Grid.Column="4" Grid.Row="2" x:Name="AddNewTourLogView"
+                        Content="{Binding AddNewTourLogViewModel}"
+                        Visibility="{Binding TourLogsViewModel.IsAddingTourLog, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <local:AddNewTourLogView />
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
+        <!-- Edit Tour Log Forms Section -->
+        <ContentControl Grid.Column="5" Grid.Row="2" x:Name="EditTourLogView"
+                        Content="{Binding EditTourLogViewModel}"
+                        Visibility="{Binding TourLogsViewModel.IsEditingTourLog, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <local:EditTourLogView />
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
+    </Grid>
+</Window>

@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="TourPlanner.UI.Views.TourListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TourPlanner.UI.Views"
+             mc:Ignorable="d">
+
+    <Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5" Padding="5" Margin="10">
+        <Grid Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Tours" FontWeight="Bold" FontSize="20" Foreground="LightGray" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="0"/>
+
+            <!-- Buttons Section -->
+            <StackPanel x:Name="TourListButtons" Grid.Row =" 0"  Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0">
+                <Button Style="{StaticResource RoundedButtonStyle}" Content="+" Padding="5" Height="30" Width="40" Margin="0,0,5,0" ToolTip="Add new Tour" Command="{Binding AddTourCommand}"/>
+                <Button Style="{StaticResource RoundedButtonStyle}" Content="-" Padding="5" Height="30" Width="40" Margin="0,0,5,0" ToolTip="Delete Tour" Command="{Binding RemoveTourCommand}"/>
+                <Button Style="{StaticResource RoundedButtonStyle}" Content="..." Padding="5" Height="30" Width="40" ToolTip="Edit Tour" Command="{Binding EditTourCommand}"/>
+            </StackPanel>
+
+            <Separator Grid.Row="1"/>
+
+            <!-- Tour List -->
+            <ListBox x:Name="TourListBox" Background="#1F1F1F" Foreground="White" FontSize="14" FontWeight="Bold" Grid.Row="2" 
+                     ItemsSource="{Binding Tours}" SelectedItem="{Binding SelectedTour, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" Padding="5"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+        </Grid>
+    </Border>
+</UserControl>

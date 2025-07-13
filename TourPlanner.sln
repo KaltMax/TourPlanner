@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35806.99
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.BLL", "TourPlanner.BLL\TourPlanner.BLL.csproj", "{B4A9AF35-18BC-440A-ADC0-A484C214F82F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B} = {A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.DAL", "TourPlanner.DAL\TourPlanner.DAL.csproj", "{7C67E20D-5EA2-4482-89CF-2200EFD23E85}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B} = {A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.Test", "TourPlanner.Test\TourPlanner.Test.csproj", "{D40BF1EA-0B24-48E9-9212-8F5396523C6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.UI", "TourPlanner.UI\TourPlanner.UI.csproj", "{0C6BE8DF-85BB-40F9-9636-BE6FEEF8F72A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.API", "TourPlanner.API\TourPlanner.API.csproj", "{BD2D7B1D-EEB3-433A-B7D7-B1E9221C9C92}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B} = {A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TourPlanner.Logging", "TourPlanner.Logging\TourPlanner.Logging.csproj", "{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Database\docker-compose.yml = Database\docker-compose.yml
+		.github\workflows\pipeline.yaml = .github\workflows\pipeline.yaml
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4A9AF35-18BC-440A-ADC0-A484C214F82F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4A9AF35-18BC-440A-ADC0-A484C214F82F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4A9AF35-18BC-440A-ADC0-A484C214F82F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4A9AF35-18BC-440A-ADC0-A484C214F82F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C67E20D-5EA2-4482-89CF-2200EFD23E85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C67E20D-5EA2-4482-89CF-2200EFD23E85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C67E20D-5EA2-4482-89CF-2200EFD23E85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C67E20D-5EA2-4482-89CF-2200EFD23E85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D40BF1EA-0B24-48E9-9212-8F5396523C6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D40BF1EA-0B24-48E9-9212-8F5396523C6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D40BF1EA-0B24-48E9-9212-8F5396523C6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D40BF1EA-0B24-48E9-9212-8F5396523C6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C6BE8DF-85BB-40F9-9636-BE6FEEF8F72A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6BE8DF-85BB-40F9-9636-BE6FEEF8F72A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6BE8DF-85BB-40F9-9636-BE6FEEF8F72A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6BE8DF-85BB-40F9-9636-BE6FEEF8F72A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD2D7B1D-EEB3-433A-B7D7-B1E9221C9C92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD2D7B1D-EEB3-433A-B7D7-B1E9221C9C92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD2D7B1D-EEB3-433A-B7D7-B1E9221C9C92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD2D7B1D-EEB3-433A-B7D7-B1E9221C9C92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9B12C56-9A85-43C0-B68D-6A39E52CBB6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {526CAC4F-8599-4EB5-9CB9-C162373E8659}
+	EndGlobalSection
+EndGlobal

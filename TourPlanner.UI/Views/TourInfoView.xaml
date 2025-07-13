@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="TourPlanner.UI.Views.TourInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:local="clr-namespace:TourPlanner.UI.Views"
+             mc:Ignorable="d">
+
+    <Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5" Padding="5" Margin="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0" Height="35">
+                <TextBlock Text="Tour Information" FontWeight="Bold" FontSize="20" Foreground="LightGray" VerticalAlignment="Center" Padding="5"/>
+            </Grid>
+
+            <Separator Grid.Row="1"/>
+
+            <TabControl x:Name="TourInfoTabControl" Grid.Row="2" Background="#1F1F1F">
+                <TabItem x:Name="MapTabItem" Header="Map" FontSize="14" Background="LightGray" FontWeight="Bold" Padding="5">
+                    <Grid>
+                        <wv2:WebView2 x:Name="MapView" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem x:Name="TourDetailsTabItem" Header="Tour Details" FontSize="14" FontWeight="Bold" Background="LightGray" Padding="5">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Tour Properties -->
+                            <TextBlock Text="Name:" Foreground="LightGray" FontSize="14" Grid.Row="0" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.Name}" Grid.Row="0" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Description:" Foreground="LightGray" FontSize="14" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.Description}" Grid.Row="1" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="From:" Foreground="LightGray" FontSize="14" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.From}" Grid.Row="2" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="To:" Foreground="LightGray" FontSize="14"  Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.To}" Grid.Row="3" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Distance:" Foreground="LightGray" FontSize="14" Grid.Row="4" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.Distance, StringFormat={}{0:F2} km}" Grid.Row="4" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Estimated Time:" Foreground="LightGray" FontSize="14" Grid.Row="5" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedTour.EstimatedTime, Converter={StaticResource MinutesToHourMinuteConverter}}" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Transport Type:" Foreground="LightGray" FontSize="14" Grid.Row="6" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.TransportType}" Grid.Row="6" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Average Rating (0 - 5):" Foreground="LightGray" FontSize="14" Grid.Row="7" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.AverageRating, StringFormat={}{0:F2}}" Grid.Row="7" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Popularity:" Foreground="LightGray" Grid.Row="8" FontSize="14" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.Popularity}" Grid.Row="8" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                            <TextBlock Text="Child-friendly:" Foreground="LightGray" FontSize="14" Grid.Row="9" Grid.Column="0" FontWeight="Bold" Margin="0, 0, 100, 2"/>
+                            <TextBlock Text="{Binding SelectedTour.IsChildFriendly}" Grid.Row="9" Grid.Column="1" Foreground="LightGray" FontSize="14" FontWeight="Normal"/>
+
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem x:Name="DirectionsTabItem" Header="Directions" FontSize="14" Background="LightGray" FontWeight="Bold" Padding="5">
+                    <ScrollViewer>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="{Binding SelectedTour.Directions}" Grid.Row="1" Grid.Column="0" Foreground="LightGray" FontSize="14" FontWeight="Normal" Margin="10, 0, 0, 0"/>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+            </TabControl>
+        </Grid>
+    </Border>
+</UserControl>

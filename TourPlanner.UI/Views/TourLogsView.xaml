@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="TourPlanner.UI.Views.TourLogsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TourPlanner.UI.Views"
+             mc:Ignorable="d">
+
+    <Grid>
+        <Border BorderThickness="2" BorderBrush="Gray" CornerRadius="5" Padding="5" Margin="10">
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Tour Logs" FontWeight="Bold" FontSize="20" Foreground="LightGray" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="0"/>
+
+                <!-- Buttons Section -->
+                <StackPanel x:Name="TourLogsButtons" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0">
+                    <Button Style="{StaticResource RoundedButtonStyle}" Content="+" Padding="5" Height="30" Width="40" Margin="0,0,5,0" ToolTip="Add New Tour Log" Command="{Binding AddTourLogCommand}"/>
+                    <Button Style="{StaticResource RoundedButtonStyle}" Content="-" Padding="5" Height="30" Width="40" Margin="0,0,5,0" ToolTip="Delete Tour Log" Command="{Binding RemoveTourLogCommand}"/>
+                    <Button Style="{StaticResource RoundedButtonStyle}" Content="..." Padding="5" Height="30" Width="40" Margin="0,0,5,0" ToolTip="Edit Tour Log" Command="{Binding EditTourLogCommand}"/>
+                </StackPanel>
+
+                <Separator Grid.Row="1"/>
+
+                <!-- Tour Logs List -->
+                <ListView x:Name="TourLogsListView" Grid.Row="2" Background="#1F1F1F"
+                          ItemsSource="{Binding TourLogs}" 
+                          SelectedItem="{Binding SelectedTourLog, Mode=TwoWay}">
+
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Date, StringFormat=d}"/>
+                            <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Comment}"/>
+                            <GridViewColumn Header="Total Distance (km)" DisplayMemberBinding="{Binding TotalDistance}"/>
+                            <GridViewColumn Header="Total Time (min)" DisplayMemberBinding="{Binding TotalTime}"/>
+                            <GridViewColumn Header ="Difficulty" DisplayMemberBinding="{Binding Difficulty}"/>
+                            <GridViewColumn Header="Rating" DisplayMemberBinding="{Binding Rating}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
