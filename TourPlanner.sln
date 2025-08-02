@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Database\docker-compose.yml = Database\docker-compose.yml
 		.github\workflows\pipeline.yaml = .github\workflows\pipeline.yaml
 		README.md = README.md
+		TourPlanner.API\TourPlanner.API.swagger.json = TourPlanner.API\TourPlanner.API.swagger.json
 	EndProjectSection
 EndProject
 Global
