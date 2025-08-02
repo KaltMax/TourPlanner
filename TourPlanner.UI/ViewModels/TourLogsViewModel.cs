@@ -154,6 +154,7 @@ namespace TourPlanner.UI.ViewModels
                 return;
 
             var currentTourId = _selectionService.SelectedTour.Id;
+            var currentTourLogIndex = TourLogs.IndexOf(SelectedTourLog);
             await _tourDataService.RemoveTourLogAsync(SelectedTourLog);
 
             var updatedTour = _tourDataService.Tours.FirstOrDefault(t => t.Id == currentTourId);
@@ -164,7 +165,8 @@ namespace TourPlanner.UI.ViewModels
                 UpdateTourLogs(updatedTour);
             }
 
-            SelectedTourLog = null;
+            var newTourLogIndex = currentTourLogIndex > 0 ? currentTourLogIndex - 1 : 0;
+            SelectedTourLog = TourLogs.Count > newTourLogIndex ? TourLogs[newTourLogIndex] : null;
             _selectionService.RaiseSelectedTourLogChanged();
         }
 

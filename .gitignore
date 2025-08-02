@@ -429,6 +429,12 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### Appsettings
+# Appsettings files that contain sensitive information
+appsettings.Development.json
+appsettings.Development.*.json
+appsettings.json
+
 ### VisualStudio ###
 
 # User-specific files

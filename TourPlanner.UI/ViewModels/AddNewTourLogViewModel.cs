@@ -115,8 +115,7 @@ namespace TourPlanner.UI.ViewModels
 
         private async void Save(object? parameter)
         {
-            if (_selectedTourService.SelectedTour == null)
-                return;
+            if (_selectedTourService.SelectedTour == null) return;
 
             var currentTourId = _selectedTourService.SelectedTour.Id;
 

@@ -6,7 +6,9 @@ The TourPlanner application is a route planning tool that allows users to create
 # 1. How to set up and use the TourPlanner
 
   - Start Docker
-  - Navigate to the **Database/** directory and execute **docker-compose up -d** to start the containerized PostgreSQL database.
+  - Navigate to the **Database/** directory and adjust the **docker-compose.yml** file if necessary (e.g., change the password for the PostgreSQL user).
+  - Execute **docker-compose up -d** to start the containerized PostgreSQL database
+  - Copy appsettings.example.json as appsettings.json in the **TourPlanner.API** directory and adjust the connection string to match your PostgreSQL database configuration and enter your OpenRouteService API key.
   - Build the Solution.
   - Start the server by running **TourPlanner.API.exe**.
   - Launch the application by running **TourPlanner.UI.exe** 
@@ -308,7 +310,7 @@ Tests focus on ViewModel behavior:
 The TourPlanner application provides PDF report generation capabilities through two specialized services. The **Tour Report** feature (`TourReportPdfService`) creates detailed documents for individual tours, including tour details, an embedded map screenshot captured from the **Leaflet WebView2 control**, a complete listing of tour logs, and statistical information (average time, distance, and rating). The **Tour Summary** feature (`TourSummaryPdfService`) generates an aggregate report of all available tours, presenting statistical analysis for each tour derived from associated logs. Both reports use the **iText7** library for professional PDF creation with structured tables, formatted text, and consistent styling. Reports are generated through menu commands in the `MainWindowViewModel`, with file dialogs allowing users to specify save locations.
 
 
-# 4. Unique Feature - Github Actions
+# 4. Github Actions
 
 The TourPlanner project implements a comprehensive CI/CD pipeline using GitHub Actions to automate build, test, and release processes. The workflow is defined in pipeline.yaml and consists of three main jobs:
 

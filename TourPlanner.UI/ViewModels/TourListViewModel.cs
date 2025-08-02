@@ -128,8 +128,11 @@ namespace TourPlanner.UI.ViewModels
         private async void RemoveTour(object? parameter)
         {
             if (SelectedTour is null) return;
+
+            var currentIndex = Tours.IndexOf(SelectedTour);
             await _dataService.RemoveTourAsync(SelectedTour);
-            SelectedTour = null;
+            var newIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+            SelectedTour = Tours.Count > 0 ? Tours[newIndex] : null;
         }
 
         private void OnSelectedTourChanged(object? sender, Tour? newTour)

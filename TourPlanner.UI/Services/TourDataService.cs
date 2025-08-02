@@ -200,7 +200,7 @@ namespace TourPlanner.UI.Services
 
             var jsonContent = await File.ReadAllTextAsync(filePath);
 
-            var importCount = await _httpService.PostRawJsonAsync("Tour/import", jsonContent);
+            await _httpService.PostRawJsonAsync("Tour/import", jsonContent);
 
             await LoadToursAsync();
 
