@@ -6,14 +6,11 @@ The TourPlanner application is a route planning tool that allows users to create
 # 1. How to set up and use the TourPlanner
 
   - Start Docker
-  - Navigate to the **Database/** directory and adjust the **docker-compose.yml** file if necessary (e.g., change the password for the PostgreSQL user).
-  - Execute **docker-compose up -d** to start the containerized PostgreSQL database
-  - Copy appsettings.example.json as appsettings.json in the **TourPlanner.API** directory and adjust the connection string to match your PostgreSQL database configuration and enter your OpenRouteService API key.
+  - Copy **.env.example** to **.env** in the project root and fill in your PostgreSQL credentials and OpenRouteService API key.
+  - Execute **docker-compose up -d** from the project root to start the containerized PostgreSQL database and API backend.
   - Build the Solution.
-  - Start the server by running **TourPlanner.API.exe**.
-  - Launch the application by running **TourPlanner.UI.exe** 
+  - Launch the application by running **TourPlanner.UI.exe**
   - Have fun and start planning your routes!
-
 
 # 2. Design and Architecture
 
@@ -38,7 +35,6 @@ The TourPlanner project is built using a **Layered Architecture**, which promote
   Contains unit tests for ViewModels and services using NUnit and NSubstitute to ensure correctness and maintainability across all layers.
 
 This architecture ensures a clean structure, with each layer having a clear responsibility and depending only on the layer directly below it.
-
 
 ## 2.1 TourPlanner.UI
 
@@ -121,7 +117,6 @@ The **Services** directory contains classes that handle data management, UI coor
 
 - **ApplicationService**  
   Provides application-level functionality, such as shutting down the application gracefully.
-
 
 ### 2.1.9 Views
 
@@ -219,7 +214,6 @@ The **Business Logic Layer (BLL)** encapsulates the core logic of the applicatio
 - Integrates **RouteService** to calculate and format route information (distance, time, and directions) using the **OpenRouteService API** during tour creation and editing.
 - Additionally, the **RouteService** saves the GeoJson received from the **OpenRouteService API** into the Tour (used for displaying the route via Leaflet in the UI).
 
-
 ## 2.4	TourPlanner.DAL
 
 The **Data Access Layer (DAL)** handles all communication with the PostgreSQL database using **Entity Framework Core** as an Object-Relational Mapper (ORM).
@@ -265,7 +259,6 @@ The **TourPlanner.Logging** library provides a centralized, abstracted logging m
 
 - **Separation of Concerns**: Completely isolates logging configuration (**log4net.config**) from application code.
 
-
 ## 2.6 TourPlanner.Tests
 
 The test solution implements unit tests for all layers of the **TourPlanner** project. The tests are designed using **NUnit** and **NSubstitute**, following best practices by mocking dependencies to isolate unit testing.
@@ -304,11 +297,9 @@ Tests focus on ViewModel behavior:
 - Test constraint enforcement (e.g., SaveCommand disabled when inputs are invalid)
 - Verify correct UI coordination between views during navigation
 
-
 ## 3 Tour Report and Tour Summary Generation
 
 The TourPlanner application provides PDF report generation capabilities through two specialized services. The **Tour Report** feature (`TourReportPdfService`) creates detailed documents for individual tours, including tour details, an embedded map screenshot captured from the **Leaflet WebView2 control**, a complete listing of tour logs, and statistical information (average time, distance, and rating). The **Tour Summary** feature (`TourSummaryPdfService`) generates an aggregate report of all available tours, presenting statistical analysis for each tour derived from associated logs. Both reports use the **iText7** library for professional PDF creation with structured tables, formatted text, and consistent styling. Reports are generated through menu commands in the `MainWindowViewModel`, with file dialogs allowing users to specify save locations.
-
 
 # 4. Github Actions
 

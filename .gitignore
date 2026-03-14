@@ -429,12 +429,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-### Appsettings
-# Appsettings files that contain sensitive information
-appsettings.Development.json
-appsettings.Development.*.json
-appsettings.json
-
 ### VisualStudio ###
 
 # User-specific files
@@ -617,3 +611,7 @@ appsettings.json
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,csharp,dotnetcore,windows
+
+### Docker
+.env
+!.env.example
