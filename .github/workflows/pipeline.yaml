@@ -16,12 +16,12 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     
     - name: Restore dependencies
       run: dotnet restore TourPlanner.sln
@@ -30,12 +30,19 @@ jobs:
       run: dotnet build TourPlanner.sln --no-restore --configuration Release
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: built-solution
         path: |
           **/bin/Release/**
           **/obj/Release/**
+        retention-days: 1
+
+    - name: Upload UI publish artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: ui-publish
+        path: TourPlanner.UI/bin/Release/
         retention-days: 1
 
   test:
@@ -44,15 +51,15 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
         
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: built-solution
         
@@ -66,22 +73,29 @@ jobs:
     
     steps:
     - name: Checkout full repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
     
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
+    - name: Download UI artifacts
+      uses: actions/download-artifact@v8
       with:
-        name: built-solution
-        path: release-artifacts
-    
-    - name: Copy Database and README to release artifacts
+        name: ui-publish
+        path: release-artifacts/TourPlanner.UI
+
+    - name: Package release
       run: |
         New-Item -Path "release-package" -ItemType Directory -Force
-        Copy-Item -Path "Database" -Destination "release-package\Database" -Recurse
+        Copy-Item -Path "release-artifacts\TourPlanner.UI" -Destination "release-package\TourPlanner.UI" -Recurse
+        Copy-Item -Path "TourPlanner.API" -Destination "release-package\TourPlanner.API" -Recurse
+        Copy-Item -Path "TourPlanner.BLL" -Destination "release-package\TourPlanner.BLL" -Recurse
+        Copy-Item -Path "TourPlanner.DAL" -Destination "release-package\TourPlanner.DAL" -Recurse
+        Copy-Item -Path "TourPlanner.Logging" -Destination "release-package\TourPlanner.Logging" -Recurse
+        Copy-Item -Path "docker-compose.yml" -Destination "release-package\docker-compose.yml"
+        Copy-Item -Path "docker-compose.override.yml" -Destination "release-package\docker-compose.override.yml"
+        Copy-Item -Path ".dockerignore" -Destination "release-package\.dockerignore"
+        Copy-Item -Path ".env.example" -Destination "release-package\.env.example"
         Copy-Item -Path "README.md" -Destination "release-package\README.md"
-        Copy-Item -Path "release-artifacts\*" -Destination "release-package\" -Recurse
         
     - name: Zip release artifacts
       run: |
@@ -92,15 +106,12 @@ jobs:
       run: echo "date=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" >> $env:GITHUB_OUTPUT
         
     - name: Delete existing release
-      uses: dev-drprasad/delete-tag-and-release@v1.0
-      with:
-        tag_name: latest
-        delete_release: true
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-      continue-on-error: true
+      run: gh release delete latest --yes --cleanup-tag 2>$null; exit 0
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
         name: TourPlanner Latest Build

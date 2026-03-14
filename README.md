@@ -5,10 +5,9 @@ The TourPlanner application is a route planning tool that allows users to create
 
 # 1. How to set up and use the TourPlanner
 
-  - Start Docker
-  - Copy **.env.example** to **.env** in the project root and fill in your PostgreSQL credentials and OpenRouteService API key.
-  - Execute **docker-compose up -d** from the project root to start the containerized PostgreSQL database and API backend.
-  - Build the Solution.
+  - Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and make sure it is running.
+  - Copy **.env.example** to **.env** in the project root and fill in your OpenRouteService API key (the default PostgreSQL credentials can be kept as-is for local development).
+  - Run **docker compose up -d --build** from the project root to start the containerized API and PostgreSQL database.
   - Launch the application by running **TourPlanner.UI.exe**
   - Have fun and start planning your routes!
 
@@ -308,7 +307,7 @@ The TourPlanner project implements a comprehensive CI/CD pipeline using GitHub A
 ## 4.1 Build Job
 - Triggers on pushes to main and develop branches, pull requests, and manual workflow dispatch
 - Runs on Windows latest environment
-- Sets up .NET 8.0 SDK
+- Sets up .NET 10.0 SDK
 - Restores dependencies and builds the solution in Release configuration
 - Archives build artifacts for subsequent jobs
 
@@ -320,8 +319,10 @@ The TourPlanner project implements a comprehensive CI/CD pipeline using GitHub A
 
 ## 4.3 Create-Release Job
 - Only runs after successful testing and when changes are pushed to the main branch
-- Packages the application binaries along with:
-  - Database configuration files for PostgreSQL setup
+- Packages the release artifact containing:
+  - Compiled TourPlanner.UI (WPF application)
+  - Backend source code (API, BLL, DAL, Logging) for Docker-based deployment
+  - Docker Compose files, Dockerfile, and .env.example
   - README.md documentation for installation and usage instructions
 - Creates a versioned ZIP release artifact containing all necessary files to deploy the application
 - Publishes the release to GitHub with timestamp information
