@@ -111,15 +111,9 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: latest
-        name: TourPlanner Latest Build
-        body: |
-          Latest successful build of TourPlanner
-          Build from branch: ${{ github.ref_name }}
-          Created: ${{ steps.date.outputs.date }}
-        files: TourPlanner-latest.zip
-        draft: false
+      run: |
+        gh release create latest TourPlanner-latest.zip `
+          --title "TourPlanner Latest Build" `
+          --notes "Latest successful build of TourPlanner`nBuild from branch: ${{ github.ref_name }}`nCreated: ${{ steps.date.outputs.date }}"
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
