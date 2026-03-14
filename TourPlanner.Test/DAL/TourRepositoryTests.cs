@@ -62,7 +62,7 @@ namespace TourPlanner.Test.DAL
 
             // Assert
             Assert.That(tours.Count(), Is.EqualTo(2));
-            CollectionAssert.AreEquivalent(tours.Select(t => t.Id), tours.Select(t => t.Id));
+            Assert.That(tours.Select(t => t.Id), Is.EquivalentTo(new[] { tour1.Id, tour2.Id }));
         }
 
         [Test]
