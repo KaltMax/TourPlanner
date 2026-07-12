@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using TourPlanner.API.Controllers;
@@ -72,39 +72,16 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public async Task GetById_ReturnsStatusCode500_WhenTourLogServiceExceptionOccurs()
+        public void GetById_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var logId = Guid.NewGuid();
-            _mockTourLogService.GetTourLogByIdAsync(logId)
-                .Throws(new TourLogServiceException("Service error"));
+            var expectedException = new TourLogServiceException("Service error");
+            _mockTourLogService.GetTourLogByIdAsync(logId).Throws(expectedException);
 
-            // Act
-            var result = await _controller.GetById(logId);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An internal error occurred."));
-        }
-
-        [Test]
-        public async Task GetById_ReturnsStatusCode500_WhenUnexpectedExceptionOccurs()
-        {
-            // Arrange
-            var logId = Guid.NewGuid();
-            _mockTourLogService.GetTourLogByIdAsync(logId)
-                .Throws(new Exception("Unexpected error"));
-
-            // Act
-            var result = await _controller.GetById(logId);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An unexpected error occurred."));
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _controller.GetById(logId));
+            Assert.That(ex, Is.SameAs(expectedException));
         }
 
         [Test]
@@ -155,39 +132,16 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public async Task Post_ReturnsStatusCode500_WhenTourLogServiceExceptionOccurs()
+        public void Post_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var newTourLog = new TourLogDomain { TourId = Guid.NewGuid(), Comment = "Test log" };
-            _mockTourLogService.AddLogAsync(Arg.Any<TourLogDomain>())
-                .Throws(new TourLogServiceException("Service error"));
+            var expectedException = new TourLogServiceException("Service error");
+            _mockTourLogService.AddLogAsync(Arg.Any<TourLogDomain>()).Throws(expectedException);
 
-            // Act
-            var result = await _controller.Post(newTourLog);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An internal error occurred while creating the tour log."));
-        }
-
-        [Test]
-        public async Task Post_ReturnsStatusCode500_WhenUnexpectedExceptionOccurs()
-        {
-            // Arrange
-            var newTourLog = new TourLogDomain { TourId = Guid.NewGuid(), Comment = "Test log" };
-            _mockTourLogService.AddLogAsync(Arg.Any<TourLogDomain>())
-                .Throws(new Exception("Unexpected error"));
-
-            // Act
-            var result = await _controller.Post(newTourLog);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An unexpected error occurred."));
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _controller.Post(newTourLog));
+            Assert.That(ex, Is.SameAs(expectedException));
         }
 
         [Test]
@@ -221,39 +175,16 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public async Task Delete_ReturnsStatusCode500_WhenTourLogServiceExceptionOccurs()
+        public void Delete_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var logId = Guid.NewGuid();
-            _mockTourLogService.DeleteLogAsync(logId)
-                .Throws(new TourLogServiceException("Service error"));
+            var expectedException = new TourLogServiceException("Service error");
+            _mockTourLogService.DeleteLogAsync(logId).Throws(expectedException);
 
-            // Act
-            var result = await _controller.Delete(logId);
-
-            // Assert
-            Assert.That(result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An internal error occurred while deleting the tour log."));
-        }
-
-        [Test]
-        public async Task Delete_ReturnsStatusCode500_WhenUnexpectedExceptionOccurs()
-        {
-            // Arrange
-            var logId = Guid.NewGuid();
-            _mockTourLogService.DeleteLogAsync(logId)
-                .Throws(new Exception("Unexpected error"));
-
-            // Act
-            var result = await _controller.Delete(logId);
-
-            // Assert
-            Assert.That(result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An unexpected error occurred."));
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _controller.Delete(logId));
+            Assert.That(ex, Is.SameAs(expectedException));
         }
 
         [Test]
@@ -286,62 +217,17 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public async Task Put_ReturnsNotFound_WhenTourLogNotFound()
+        public void Put_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var logId = Guid.NewGuid();
             var updatedTourLog = new TourLogDomain { Id = logId, Comment = "Updated comment" };
+            var expectedException = new TourLogServiceNotFoundException("Tour log not found");
+            _mockTourLogService.UpdateTourLogAsync(logId, Arg.Any<TourLogDomain>()).Throws(expectedException);
 
-            _mockTourLogService.UpdateTourLogAsync(logId, Arg.Any<TourLogDomain>())
-                .Throws(new TourLogServiceNotFoundException("Tour log not found"));
-
-            // Act
-            var result = await _controller.Put(logId, updatedTourLog);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<NotFoundObjectResult>());
-            var notFoundResult = result.Result as NotFoundObjectResult;
-            Assert.That(notFoundResult!.Value, Is.EqualTo("Tour log not found"));
-        }
-
-        [Test]
-        public async Task Put_ReturnsStatusCode500_WhenTourLogServiceExceptionOccurs()
-        {
-            // Arrange
-            var logId = Guid.NewGuid();
-            var updatedTourLog = new TourLogDomain { Id = logId, Comment = "Updated comment" };
-
-            _mockTourLogService.UpdateTourLogAsync(logId, Arg.Any<TourLogDomain>())
-                .Throws(new TourLogServiceException("Service error"));
-
-            // Act
-            var result = await _controller.Put(logId, updatedTourLog);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An internal error occurred while updating the tour log."));
-        }
-
-        [Test]
-        public async Task Put_ReturnsStatusCode500_WhenUnexpectedExceptionOccurs()
-        {
-            // Arrange
-            var logId = Guid.NewGuid();
-            var updatedTourLog = new TourLogDomain { Id = logId, Comment = "Updated comment" };
-
-            _mockTourLogService.UpdateTourLogAsync(logId, Arg.Any<TourLogDomain>())
-                .Throws(new Exception("Unexpected error"));
-
-            // Act
-            var result = await _controller.Put(logId, updatedTourLog);
-
-            // Assert
-            Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-            var statusCodeResult = result.Result as ObjectResult;
-            Assert.That(statusCodeResult!.StatusCode, Is.EqualTo(500));
-            Assert.That(statusCodeResult.Value, Is.EqualTo("An unexpected error occurred."));
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<TourLogServiceNotFoundException>(() => _controller.Put(logId, updatedTourLog));
+            Assert.That(ex, Is.SameAs(expectedException));
         }
     }
 }
