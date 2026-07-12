@@ -20,6 +20,8 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpGet(Name = "GetTours")]
+        [ProducesResponseType(typeof(IEnumerable<TourDomain>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IEnumerable<TourDomain>> Get()
         {
             _logger.LogInformation("Getting all tours");
@@ -37,6 +39,11 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPost(Name = "AddNewTour")]
+        [ProducesResponseType(typeof(TourDomain), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TourDomain>> Post([FromBody] TourDomain newTour)
         {
             _logger.LogInformation($"Creating new tour: {newTour.Name}");
@@ -74,6 +81,9 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpDelete("{id:guid}", Name = "DeleteTour")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(Guid id)
         {
             _logger.LogDebug($"Deleting tour with ID: {id}");
@@ -102,6 +112,12 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPut("{id:guid}", Name = "UpdateTour")]
+        [ProducesResponseType(typeof(TourDomain), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TourDomain>> Put(Guid id, [FromBody] TourDomain updatedTour)
         {
             _logger.LogDebug($"Updating tour with ID: {id}");
@@ -144,6 +160,8 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPost("import")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ImportTours([FromBody] List<TourDomain> tours)
         {
             _logger.LogInformation($"Importing {tours.Count} tours");

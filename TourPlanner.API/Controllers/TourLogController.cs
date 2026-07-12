@@ -20,6 +20,9 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpGet("{id:guid}", Name = "GetById")]
+        [ProducesResponseType(typeof(TourLogDomain), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TourLogDomain>> GetById(Guid id)
         {
             _logger.LogDebug($"Getting tour log with ID: {id}");
@@ -48,6 +51,8 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPost(Name = "AddNewTourLog")]
+        [ProducesResponseType(typeof(TourLogDomain), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TourLogDomain>> Post([FromBody] TourLogDomain newLog)
         {
             _logger.LogDebug($"Creating new tour log for tour ID: {newLog.TourId}");
@@ -70,6 +75,9 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpDelete("{id:guid}", Name = "DeleteTourLog")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(Guid id)
         {
             _logger.LogDebug($"Deleting tour log with ID: {id}");
@@ -98,6 +106,9 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPut("{id:guid}", Name = "UpdateTourLog")]
+        [ProducesResponseType(typeof(TourLogDomain), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TourLogDomain>> Put(Guid id, [FromBody] TourLogDomain updatedTourLog)
         {
             _logger.LogDebug($"Updating tour log with ID: {id}");
