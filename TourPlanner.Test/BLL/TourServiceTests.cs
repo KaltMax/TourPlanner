@@ -143,7 +143,7 @@ namespace TourPlanner.Test.BLL
             _routeService.GetRouteInfoAsync(newTour.From, newTour.To, newTour.TransportType).Returns(routeInfo);
 
             _mapper.ToEntity(Arg.Is<TourDomain>(d =>
-                d.Id == newTourId && d.Name == "New Tour")).Returns(tourEntity);
+                d != null && d.Id == newTourId && d.Name == "New Tour")).Returns(tourEntity);
 
             _tourRepository.AddTourAsync(tourEntity).Returns(savedTourEntity);
 
@@ -392,7 +392,7 @@ namespace TourPlanner.Test.BLL
                 .Returns(routeInfo);
 
             _mapper.ToEntity(Arg.Is<TourDomain>(d =>
-                d.Id == tourId && d.Name == "Updated Tour")).Returns(tourEntity);
+                d != null && d.Id == tourId && d.Name == "Updated Tour")).Returns(tourEntity);
 
             _tourRepository.UpdateTourAsync(tourEntity).Returns(updatedTourEntity);
 

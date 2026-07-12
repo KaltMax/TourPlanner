@@ -212,7 +212,7 @@ namespace TourPlanner.Test.BLL
 
             // Assert
             Assert.That(newTourLog.Id, Is.Not.EqualTo(Guid.Empty));
-            _mapper.Received(1).ToEntity(Arg.Is<TourLogDomain>(t => t.Id != Guid.Empty));
+            _mapper.Received(1).ToEntity(Arg.Is<TourLogDomain>(t => t != null && t.Id != Guid.Empty));
         }
 
         [Test]
@@ -374,7 +374,7 @@ namespace TourPlanner.Test.BLL
                 TourId = tourId
             };
 
-            _mapper.ToEntity(Arg.Is<TourLogDomain>(t => t.Id == logId)).Returns(tourLogEntity);
+            _mapper.ToEntity(Arg.Is<TourLogDomain>(t => t != null && t.Id == logId)).Returns(tourLogEntity);
             _tourLogRepository.UpdateTourLogAsync(tourLogEntity).Returns(savedEntity);
             _mapper.ToDomain(savedEntity).Returns(expectedResult);
 
@@ -385,7 +385,7 @@ namespace TourPlanner.Test.BLL
             Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.EqualTo(expectedResult));
             Assert.That(updatedTourLog.Id, Is.EqualTo(logId));
-            _mapper.Received(1).ToEntity(Arg.Is<TourLogDomain>(t => t.Id == logId));
+            _mapper.Received(1).ToEntity(Arg.Is<TourLogDomain>(t => t != null && t.Id == logId));
             await _tourLogRepository.Received(1).UpdateTourLogAsync(tourLogEntity);
             _mapper.Received(1).ToDomain(savedEntity);
         }

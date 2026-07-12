@@ -149,6 +149,7 @@ namespace TourPlanner.Test.API
             Assert.That(createdAtActionResult.Value, Is.EqualTo(createdTourLog));
 
             await _mockTourLogService.Received(1).AddLogAsync(Arg.Is<TourLogDomain>(t =>
+                t != null &&
                 t.TourId == newTourLog.TourId &&
                 t.Comment == newTourLog.Comment));
         }
