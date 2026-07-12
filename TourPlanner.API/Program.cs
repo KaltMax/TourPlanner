@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using TourPlanner.BLL.Services;
 using TourPlanner.BLL.Interfaces;
@@ -6,6 +7,7 @@ using TourPlanner.DAL.Repositories;
 using TourPlanner.DAL.Interfaces;
 using TourPlanner.DAL.Context;
 using TourPlanner.BLL.Configurations;
+using TourPlanner.API.Middleware;
 using TourPlanner.Logging;
 
 namespace TourPlanner.API
@@ -26,6 +28,17 @@ namespace TourPlanner.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Centralized exception handling with ProblemDetails responses
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails(options =>
+            {
+                options.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Extensions.TryAdd("traceId",
+                        Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+                };
+            });
 
             // Add PostgreSQL EF DbContext
             builder.Services.AddDbContext<TourPlannerDbContext>(options =>
@@ -69,6 +82,8 @@ namespace TourPlanner.API
             }
 
             // Configure the HTTP request pipeline.
+            app.UseExceptionHandler();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
