@@ -615,3 +615,7 @@ $RECYCLE.BIN/
 ### Docker
 .env
 !.env.example
+
+### Local app configuration (contains secrets: connection strings, API keys)
+**/appsettings.Development.json
+!**/appsettings.Development.example.json
