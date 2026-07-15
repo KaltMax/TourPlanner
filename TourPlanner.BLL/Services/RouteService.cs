@@ -25,6 +25,8 @@ namespace TourPlanner.BLL.Services
 
             try
             {
+                transportType = MapTransportType(transportType);
+
                 var fromCoordinates = await GeocodeAsync(from);
                 if (fromCoordinates == null)
                 {
@@ -50,6 +52,10 @@ namespace TourPlanner.BLL.Services
                 throw;
             }
             catch (RoutingException)
+            {
+                throw;
+            }
+            catch (UnsupportedTransportTypeException)
             {
                 throw;
             }
@@ -112,14 +118,12 @@ namespace TourPlanner.BLL.Services
 
         private async Task<RouteInfo> GetDirectionsAsync(double[] fromCoordinates, double[] toCoordinates, string transportType)
         {
-            var profile = MapTransportType(transportType);
-
             var fromLon = fromCoordinates[0].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var fromLat = fromCoordinates[1].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var toLon = toCoordinates[0].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var toLat = toCoordinates[1].ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            var url = $"v2/directions/{profile}?start={fromLon},{fromLat}&end={toLon},{toLat}";
+            var url = $"v2/directions/{transportType}?start={fromLon},{fromLat}&end={toLon},{toLat}";
 
             try
             {
@@ -166,7 +170,8 @@ namespace TourPlanner.BLL.Services
             {
                 "car" => "driving-car",
                 "bike" => "cycling-regular",
-                _ => "foot-walking"
+                "walking" => "foot-walking",
+                _ => throw new UnsupportedTransportTypeException($"Unsupported transport type: {input}")
             };
         }
 

@@ -254,6 +254,21 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
+        public void GetRouteInfoAsync_ShouldThrowUnsupportedTransportTypeException_ForInvalidTransportType()
+        {
+            // Arrange
+            const string from = "Vienna";
+            const string to = "Salzburg";
+            const string transportType = "Plane"; // Invalid transport type
+
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<UnsupportedTransportTypeException>(() =>
+                _routeService.GetRouteInfoAsync(from, to, transportType));
+
+            Assert.That(ex.Message, Does.Contain("Unsupported transport type"));
+        }
+
+        [Test]
         public void GetRouteInfoAsync_ShouldThrowRoutingException_WhenGeocodingAPIReturnsErrorStatus()
         {
             // Arrange
