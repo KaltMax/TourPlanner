@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using TourPlanner.BLL.Configurations;
 using TourPlanner.BLL.DomainModels;
@@ -11,6 +10,8 @@ namespace TourPlanner.BLL.Services
 {
     public class RouteService : IRouteService
     {
+        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly ILoggerWrapper<RouteService> _logger;
@@ -74,22 +75,26 @@ namespace TourPlanner.BLL.Services
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
             {
+                // Network failure / timeout reaching the provider is an upstream problem,
+                // not a bad address; surface it as a 502 via RoutingException.
                 _logger.LogError(ex, $"Network error contacting the geocoding service for '{location}'");
                 throw new RoutingException($"Failed to reach the geocoding service for '{location}'.", ex);
             }
 
             if (!response.IsSuccessStatusCode)
             {
+                // A non-success status (auth error, rate limit, provider outage, ...) is an
+                // upstream failure, not an unresolvable address; surface it as a 502.
                 _logger.LogWarning($"Geocoding API returned status code {response.StatusCode} for '{location}'");
                 throw new RoutingException($"Geocoding service returned status {(int)response.StatusCode} for '{location}'.");
             }
 
             var content = await response.Content.ReadAsStringAsync();
 
-            JsonNode? json;
+            OrsGeocodeResponse? geocode;
             try
             {
-                json = JsonNode.Parse(content);
+                geocode = JsonSerializer.Deserialize<OrsGeocodeResponse>(content, JsonOptions);
             }
             catch (JsonException ex)
             {
@@ -97,18 +102,16 @@ namespace TourPlanner.BLL.Services
                 throw new RoutingException($"Geocoding service returned an invalid response for '{location}'.", ex);
             }
 
-            var coordinates = FirstElement(json?["features"])?["geometry"]?["coordinates"] as JsonArray;
-            if (coordinates == null || coordinates.Count < 2)
+            var coordinates = geocode?.Features?.FirstOrDefault()?.Geometry?.Coordinates;
+            if (coordinates == null || coordinates.Length < 2)
             {
+                // A successful response with no coordinates means the address itself could not
+                // be resolved. Returning null lets the caller map this to a 400 Bad Request.
                 _logger.LogWarning($"No coordinates found in geocoding response for '{location}'");
                 return null;
             }
 
-            return
-            [
-                coordinates[0]?.GetValue<double>() ?? 0,
-                coordinates[1]?.GetValue<double>() ?? 0
-            ];
+            return [coordinates[0], coordinates[1]];
         }
 
         private async Task<RouteInfo> GetDirectionsAsync(double[] fromCoordinates, double[] toCoordinates, string transportType)
@@ -134,23 +137,20 @@ namespace TourPlanner.BLL.Services
                     throw new RoutingException($"Routing API returned error {response.StatusCode}: {content}");
                 }
 
-                var json = JsonNode.Parse(content);
-
-                var summary = FirstElement(json?["features"])?["properties"]?["summary"];
-                if (summary == null)
+                var directions = JsonSerializer.Deserialize<OrsDirectionsResponse>(content, JsonOptions);
+                var properties = directions?.Features?.FirstOrDefault()?.Properties;
+                if (properties?.Summary is not { } summary)
                 {
                     _logger.LogWarning($"Invalid routing API response: No route summary");
                     throw new RoutingException("The routing API response did not contain a valid route summary.");
                 }
 
-                var directionsText = FormatDirections(json);
-
                 return new RouteInfo
                 {
-                    Distance = Math.Round(summary["distance"]?.GetValue<double>() ?? 0) / 1000.0,
-                    EstimatedTime = Math.Round(summary["duration"]?.GetValue<double>() ?? 0) / 60.0,
-                    Directions = directionsText,
-                    GeoJson = json!.ToJsonString()
+                    Distance = Math.Round(summary.Distance) / 1000.0,
+                    EstimatedTime = Math.Round(summary.Duration) / 60.0,
+                    Directions = FormatDirections(properties.Segments),
+                    GeoJson = content
                 };
             }
             catch (RoutingException)
@@ -174,36 +174,24 @@ namespace TourPlanner.BLL.Services
             };
         }
 
-        // Returns the first element of a JSON array node, or null if the node is not an
-        // array or is empty. Guards against the IndexOutOfRange that a raw [0] would throw.
-        private static JsonNode? FirstElement(JsonNode? node)
-            => node is JsonArray { Count: > 0 } array ? array[0] : null;
-
-        private string FormatDirections(JsonNode? json)
+        private string FormatDirections(IReadOnlyList<OrsSegment>? segments)
         {
             try
             {
-                var firstFeature = FirstElement(json?["features"]);
-                var firstSegment = FirstElement(firstFeature?["properties"]?["segments"]);
-                var steps = firstSegment?["steps"] as JsonArray;
-                var directionsList = new List<string>();
-
-                if (steps == null)
+                var steps = segments?.FirstOrDefault()?.Steps;
+                if (steps == null || steps.Count == 0)
                 {
                     return string.Empty;
                 }
 
+                var directionsList = new List<string>();
                 foreach (var step in steps)
                 {
-                    var instruction = step?["instruction"]?.GetValue<string>() ?? "Unknown instruction";
-                    var name = step?["name"]?.GetValueKind() == JsonValueKind.String ? step["name"]?.GetValue<string>() : null;
-                    var distance = step?["distance"]?.GetValue<double>() ?? 0;
-                    var duration = step?["duration"]?.GetValue<double>() ?? 0;
-
+                    var name = step.Name;
                     var line =
-                        $"→ {instruction}" +
+                        $"→ {step.Instruction ?? "Unknown instruction"}" +
                         (string.IsNullOrWhiteSpace(name) || name == "-" ? "" : $" (on {name})") + "\n" +
-                        $"   Distance: {distance:F0} m, Duration: {duration:F0} s";
+                        $"   Distance: {step.Distance:F0} m, Duration: {step.Duration:F0} s";
 
                     directionsList.Add(line);
                 }
