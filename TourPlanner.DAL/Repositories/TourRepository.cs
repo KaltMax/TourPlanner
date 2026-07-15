@@ -36,6 +36,23 @@ namespace TourPlanner.DAL.Repositories
             }
         }
 
+        public async Task<TourEntity?> GetTourByIdAsync(Guid id)
+        {
+            _logger.LogDebug($"Retrieving tour from database: {id}");
+            try
+            {
+                return await _context.Tours
+                    .AsNoTracking()
+                    .Include(t => t.TourLogs)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving tour from database: {id}");
+                throw new TourRepositoryException($"Error retrieving tour with ID {id}.", ex);
+            }
+        }
+
         public async Task<TourEntity> AddTourAsync(TourEntity newTourEntity)
         {
             _logger.LogInformation($"Adding new tour to database: {newTourEntity.Id} - {newTourEntity.Name}");
@@ -97,7 +114,6 @@ namespace TourPlanner.DAL.Repositories
             existing.Distance = updatedTourEntity.Distance;
             existing.EstimatedTime = updatedTourEntity.EstimatedTime;
             existing.TransportType = updatedTourEntity.TransportType;
-            existing.TourLogs = updatedTourEntity.TourLogs;
 
             try
             {

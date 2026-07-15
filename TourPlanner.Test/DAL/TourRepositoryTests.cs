@@ -197,6 +197,82 @@ namespace TourPlanner.Test.DAL
         }
 
         [Test]
+        public async Task GetTourByIdAsync_ShouldReturnTourWithLogs_WhenTourExists()
+        {
+            // Arrange
+            var tourId = Guid.NewGuid();
+            var tour = new TourEntity
+            {
+                Id = tourId,
+                Name = "Tour with logs",
+                From = "Vienna",
+                To = "Salzburg",
+                TourLogs = new List<TourLogEntity>
+                {
+                    new() { Id = Guid.NewGuid(), Date = DateTime.UtcNow, Comment = "Log 1", TourId = tourId }
+                }
+            };
+            await _dbContext.Tours.AddAsync(tour);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _repository.GetTourByIdAsync(tourId);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Id, Is.EqualTo(tourId));
+            Assert.That(result.TourLogs.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task GetTourByIdAsync_ShouldReturnNull_WhenTourDoesNotExist()
+        {
+            // Act
+            var result = await _repository.GetTourByIdAsync(Guid.NewGuid());
+
+            // Assert
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        public async Task UpdateTourAsync_ShouldNotAffectTourLogs_WhenUpdating()
+        {
+            // Arrange
+            var tourId = Guid.NewGuid();
+            var tour = new TourEntity
+            {
+                Id = tourId,
+                Name = "Original Tour",
+                From = "Vienna",
+                To = "Salzburg",
+                TourLogs = new List<TourLogEntity>
+                {
+                    new() { Id = Guid.NewGuid(), Date = DateTime.UtcNow, Comment = "Log 1", TourId = tourId },
+                    new() { Id = Guid.NewGuid(), Date = DateTime.UtcNow, Comment = "Log 2", TourId = tourId }
+                }
+            };
+            await _dbContext.Tours.AddAsync(tour);
+            await _dbContext.SaveChangesAsync();
+
+            // A PUT payload carrying no logs must not wipe the tour's existing logs.
+            var updatedTour = new TourEntity
+            {
+                Id = tourId,
+                Name = "Renamed Tour",
+                From = "Vienna",
+                To = "Salzburg",
+                TourLogs = new List<TourLogEntity>()
+            };
+
+            // Act
+            await _repository.UpdateTourAsync(updatedTour);
+
+            // Assert
+            var logCount = _dbContext.TourLogs.Count(l => l.TourId == tourId);
+            Assert.That(logCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public async Task TourNameExistsAsync_ShouldReturnFalse_WhenNameDoesNotExist()
         {
             // Arrange

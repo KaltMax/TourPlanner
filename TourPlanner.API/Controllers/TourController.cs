@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using TourPlanner.BLL.DomainModels;
+using TourPlanner.API.DTOs;
+using TourPlanner.API.Mapping;
 using TourPlanner.BLL.Interfaces;
 using TourPlanner.Logging;
 
@@ -19,30 +20,33 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpGet(Name = "GetTours")]
-        [ProducesResponseType(typeof(IEnumerable<TourDomain>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<TourResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IEnumerable<TourDomain>> Get()
+        public async Task<IEnumerable<TourResponse>> Get()
         {
             _logger.LogInformation("Getting all tours");
 
             var tours = await _tourService.GetAllToursAsync();
-            _logger.LogInformation($"Retrieved {tours?.Count() ?? 0} tours");
-            return tours ?? Enumerable.Empty<TourDomain>();
+            var response = (tours)
+                .Select(tour => tour.ToResponse())
+                .ToList();
+            _logger.LogInformation($"Retrieved {response.Count} tours");
+            return response;
         }
 
         [HttpPost(Name = "AddNewTour")]
-        [ProducesResponseType(typeof(TourDomain), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(TourResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TourDomain>> Post([FromBody] TourDomain newTour, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<TourResponse>> Post([FromBody] TourRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation($"Creating new tour: {newTour.Name}");
+            _logger.LogInformation($"Creating new tour: {request.Name}");
 
-            var created = await _tourService.AddTourAsync(newTour, cancellationToken);
+            var created = await _tourService.AddTourAsync(request.ToDomain(), cancellationToken);
             _logger.LogInformation($"Successfully created tour with ID: {created.Id}");
-            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created.ToResponse());
         }
 
         [HttpDelete("{id:guid}", Name = "DeleteTour")]
@@ -65,30 +69,31 @@ namespace TourPlanner.API.Controllers
         }
 
         [HttpPut("{id:guid}", Name = "UpdateTour")]
-        [ProducesResponseType(typeof(TourDomain), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TourResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TourDomain>> Put(Guid id, [FromBody] TourDomain updatedTour, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<TourResponse>> Put(Guid id, [FromBody] TourRequest request, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Updating tour with ID: {id}");
 
-            var result = await _tourService.UpdateTourAsync(id, updatedTour, cancellationToken);
+            var result = await _tourService.UpdateTourAsync(id, request.ToDomain(), cancellationToken);
             _logger.LogInformation($"Successfully updated tour with ID: {id}");
-            return Ok(result);
+            return Ok(result.ToResponse());
         }
 
         [HttpPost("import")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ImportTours([FromBody] List<TourDomain> tours, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ImportTours([FromBody] List<ImportTourRequest> tours, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation($"Importing {tours.Count} tours");
 
-            var importedCount = await _tourService.ImportToursAsync(tours, cancellationToken);
+            var domains = tours.Select(tour => tour.ToDomain()).ToList();
+            var importedCount = await _tourService.ImportToursAsync(domains, cancellationToken);
             _logger.LogInformation($"Import completed: {importedCount} tours imported");
             return Ok(new { ImportedCount = importedCount });
         }
