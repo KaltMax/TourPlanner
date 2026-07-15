@@ -62,7 +62,7 @@ namespace TourPlanner.BLL.Services
 
         private async Task<double[]?> GeocodeAsync(string location)
         {
-            var url = $"https://api.openrouteservice.org/geocode/search?text={Uri.EscapeDataString(location)}";
+            var url = $"geocode/search?text={Uri.EscapeDataString(location)}";
 
             HttpResponseMessage response;
             try
@@ -119,7 +119,7 @@ namespace TourPlanner.BLL.Services
             var toLon = toCoordinates[0].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var toLat = toCoordinates[1].ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            var url = $"https://api.openrouteservice.org/v2/directions/{profile}?start={fromLon},{fromLat}&end={toLon},{toLat}";
+            var url = $"v2/directions/{profile}?start={fromLon},{fromLat}&end={toLon},{toLat}";
 
             try
             {

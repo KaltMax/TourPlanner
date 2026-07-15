@@ -22,9 +22,13 @@ namespace TourPlanner.Test.BLL
             // Initialize mocks
             _logger = Substitute.For<ILoggerWrapper<RouteService>>();
 
-            // Initialize mock HTTP handler
+            // Initialize mock HTTP handler. BaseAddress mirrors the one configured on the
+            // typed HttpClient in Program.cs so the service's relative request URIs resolve.
             _mockHttpHandler = new MockHttpMessageHandler();
-            _httpClient = new HttpClient(_mockHttpHandler);
+            _httpClient = new HttpClient(_mockHttpHandler)
+            {
+                BaseAddress = new Uri("https://api.openrouteservice.org/")
+            };
 
             // Create service with mocked dependencies
             _routeService = new RouteService(_httpClient, _logger);

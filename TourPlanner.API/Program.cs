@@ -49,6 +49,7 @@ builder.Services.AddScoped<IMapper, Mapper>();
 // Register RouteService with an HttpClient that authenticates against OpenRouteService.
 builder.Services.AddHttpClient<IRouteService, RouteService>(client =>
 {
+    client.BaseAddress = new Uri("https://api.openrouteservice.org/");
     var apiKey = builder.Configuration["OpenRouteService:ApiKey"] ?? string.Empty;
     client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", apiKey);
 });
