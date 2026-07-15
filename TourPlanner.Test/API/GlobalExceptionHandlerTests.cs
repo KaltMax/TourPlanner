@@ -111,6 +111,15 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
+        public async Task UnsupportedTransportTypeException_MapsTo400_WithMessage()
+        {
+            var (status, problem) = await InvokeAsync(new UnsupportedTransportTypeException("Unsupported transport type"));
+            Assert.That(status, Is.EqualTo(StatusCodes.Status400BadRequest));
+            Assert.That(problem.Status, Is.EqualTo(StatusCodes.Status400BadRequest));
+            Assert.That(problem.Title, Is.EqualTo("Unsupported transport type"));
+        }
+
+        [Test]
         public async Task UnexpectedException_MapsTo500()
         {
             var (status, problem) = await InvokeAsync(new Exception("Unexpected error"));

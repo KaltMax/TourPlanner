@@ -61,6 +61,7 @@ namespace TourPlanner.API.Middleware
             TourLogServiceNotFoundException => (StatusCodes.Status404NotFound, exception.Message),
             TourServiceException            => (StatusCodes.Status500InternalServerError, "An internal service error occurred."),
             TourLogServiceException         => (StatusCodes.Status500InternalServerError, "An internal error occurred."),
+            UnsupportedTransportTypeException => (StatusCodes.Status400BadRequest, exception.Message),
             _                               => (StatusCodes.Status500InternalServerError, "An unexpected error occurred."),
         };
     }

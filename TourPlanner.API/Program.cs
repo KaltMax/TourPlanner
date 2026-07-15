@@ -6,7 +6,6 @@ using TourPlanner.BLL.Mappers;
 using TourPlanner.DAL.Repositories;
 using TourPlanner.DAL.Interfaces;
 using TourPlanner.DAL.Context;
-using TourPlanner.BLL.Configurations;
 using TourPlanner.API.Middleware;
 using TourPlanner.Logging;
 
@@ -47,11 +46,13 @@ builder.Services.AddScoped<ITourLogRepository, TourLogRepository>();
 // Register the Mapper
 builder.Services.AddScoped<IMapper, Mapper>();
 
-// Bind OpenRouteService API Key from appsettings.json
-builder.Services.Configure<OpenRouteServiceOptions>(builder.Configuration.GetSection("OpenRouteService"));
-
-// Register RouteService and inject HttpClient
-builder.Services.AddHttpClient<IRouteService, RouteService>();
+// Register RouteService with an HttpClient that authenticates against OpenRouteService.
+builder.Services.AddHttpClient<IRouteService, RouteService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.openrouteservice.org/");
+    var apiKey = builder.Configuration["OpenRouteService:ApiKey"] ?? string.Empty;
+    client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", apiKey);
+});
 
 var app = builder.Build();
 
