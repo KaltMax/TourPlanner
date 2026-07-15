@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using TourPlanner.BLL.Configurations;
 using TourPlanner.BLL.DomainModels;
@@ -86,19 +86,19 @@ namespace TourPlanner.BLL.Services
 
             var content = await response.Content.ReadAsStringAsync();
 
-            JObject json;
+            JsonNode? json;
             try
             {
-                json = JObject.Parse(content);
+                json = JsonNode.Parse(content);
             }
-            catch (JsonReaderException ex)
+            catch (JsonException ex)
             {
                 _logger.LogError(ex, $"Invalid JSON received from the geocoding service for '{location}'");
                 throw new RoutingException($"Geocoding service returned an invalid response for '{location}'.", ex);
             }
 
-            var coordinates = json["features"]?.FirstOrDefault()?["geometry"]?["coordinates"];
-            if (coordinates == null || coordinates.Count() < 2)
+            var coordinates = FirstElement(json?["features"])?["geometry"]?["coordinates"] as JsonArray;
+            if (coordinates == null || coordinates.Count < 2)
             {
                 _logger.LogWarning($"No coordinates found in geocoding response for '{location}'");
                 return null;
@@ -106,8 +106,8 @@ namespace TourPlanner.BLL.Services
 
             return
             [
-                coordinates[0]?.Value<double>() ?? 0,
-                coordinates[1]?.Value<double>() ?? 0
+                coordinates[0]?.GetValue<double>() ?? 0,
+                coordinates[1]?.GetValue<double>() ?? 0
             ];
         }
 
@@ -134,9 +134,9 @@ namespace TourPlanner.BLL.Services
                     throw new RoutingException($"Routing API returned error {response.StatusCode}: {content}");
                 }
 
-                var json = JObject.Parse(content);
+                var json = JsonNode.Parse(content);
 
-                var summary = json["features"]?[0]?["properties"]?["summary"];
+                var summary = FirstElement(json?["features"])?["properties"]?["summary"];
                 if (summary == null)
                 {
                     _logger.LogWarning($"Invalid routing API response: No route summary");
@@ -147,10 +147,10 @@ namespace TourPlanner.BLL.Services
 
                 return new RouteInfo
                 {
-                    Distance = Math.Round(summary["distance"]?.Value<double>() ?? 0) / 1000.0,
-                    EstimatedTime = Math.Round(summary["duration"]?.Value<double>() ?? 0) / 60.0,
+                    Distance = Math.Round(summary["distance"]?.GetValue<double>() ?? 0) / 1000.0,
+                    EstimatedTime = Math.Round(summary["duration"]?.GetValue<double>() ?? 0) / 60.0,
                     Directions = directionsText,
-                    GeoJson = json.ToString()
+                    GeoJson = json!.ToJsonString()
                 };
             }
             catch (RoutingException)
@@ -174,11 +174,18 @@ namespace TourPlanner.BLL.Services
             };
         }
 
-        private string FormatDirections(JObject json)
+        // Returns the first element of a JSON array node, or null if the node is not an
+        // array or is empty. Guards against the IndexOutOfRange that a raw [0] would throw.
+        private static JsonNode? FirstElement(JsonNode? node)
+            => node is JsonArray { Count: > 0 } array ? array[0] : null;
+
+        private string FormatDirections(JsonNode? json)
         {
             try
             {
-                var steps = json["features"]?[0]?["properties"]?["segments"]?[0]?["steps"];
+                var firstFeature = FirstElement(json?["features"]);
+                var firstSegment = FirstElement(firstFeature?["properties"]?["segments"]);
+                var steps = firstSegment?["steps"] as JsonArray;
                 var directionsList = new List<string>();
 
                 if (steps == null)
@@ -188,10 +195,10 @@ namespace TourPlanner.BLL.Services
 
                 foreach (var step in steps)
                 {
-                    var instruction = step["instruction"]?.Value<string>() ?? "Unknown instruction";
-                    var name = step["name"]?.Type == JTokenType.String ? step["name"]?.Value<string>() : null;
-                    var distance = step["distance"]?.Value<double>() ?? 0;
-                    var duration = step["duration"]?.Value<double>() ?? 0;
+                    var instruction = step?["instruction"]?.GetValue<string>() ?? "Unknown instruction";
+                    var name = step?["name"]?.GetValueKind() == JsonValueKind.String ? step["name"]?.GetValue<string>() : null;
+                    var distance = step?["distance"]?.GetValue<double>() ?? 0;
+                    var duration = step?["duration"]?.GetValue<double>() ?? 0;
 
                     var line =
                         $"→ {instruction}" +
