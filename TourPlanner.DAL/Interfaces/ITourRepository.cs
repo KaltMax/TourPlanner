@@ -5,6 +5,7 @@ namespace TourPlanner.DAL.Interfaces
     public interface ITourRepository
     {
         Task<IEnumerable<TourEntity>> GetAllToursAsync();
+        Task<TourEntity?> GetTourByIdAsync(Guid id);
         Task<TourEntity> AddTourAsync(TourEntity newTourEntity);
         Task<bool> DeleteTourAsync(Guid id);
         Task<TourEntity> UpdateTourAsync(TourEntity tourEntity);

@@ -1,6 +1,7 @@
 ﻿using TourPlanner.BLL.Interfaces;
 using TourPlanner.BLL.DomainModels;
 using TourPlanner.BLL.Exceptions;
+using TourPlanner.DAL.Entities;
 using TourPlanner.DAL.Exceptions;
 using TourPlanner.DAL.Interfaces;
 using TourPlanner.Logging;
@@ -110,11 +111,34 @@ namespace TourPlanner.BLL.Services
                     throw new TourNameAlreadyExistsException($"A tour with the name '{updatedTour.Name}' already exists.");
                 }
 
-                var routeInfo = await _routeService.GetRouteInfoAsync(updatedTour.From, updatedTour.To, updatedTour.TransportType, cancellationToken);
-                updatedTour.Distance = routeInfo.Distance;
-                updatedTour.EstimatedTime = routeInfo.EstimatedTime;
-                updatedTour.Directions = routeInfo.Directions;
-                updatedTour.GeoJson = routeInfo.GeoJson;
+                var existing = await _tourRepository.GetTourByIdAsync(id);
+                if (existing == null)
+                {
+                    _logger.LogWarning($"Tour with ID: {id} not found during update");
+                    throw new TourServiceNotFoundException($"Tour with ID {id} not found.");
+                }
+
+                // Only call the routing provider when the inputs that determine the route
+                // actually changed (or when the stored route data is incomplete). A name- or
+                // description-only edit reuses the existing route data, avoiding a needless
+                // external call and shielding the edit from an unrelated provider outage.
+                if (RouteInputsChanged(existing, updatedTour) || !HasRouteData(existing))
+                {
+                    _logger.LogDebug($"Route inputs changed for tour '{updatedTour.Name}', recalculating route");
+                    var routeInfo = await _routeService.GetRouteInfoAsync(updatedTour.From, updatedTour.To, updatedTour.TransportType, cancellationToken);
+                    updatedTour.Distance = routeInfo.Distance;
+                    updatedTour.EstimatedTime = routeInfo.EstimatedTime;
+                    updatedTour.Directions = routeInfo.Directions;
+                    updatedTour.GeoJson = routeInfo.GeoJson;
+                }
+                else
+                {
+                    _logger.LogDebug($"Route inputs unchanged for tour '{updatedTour.Name}', reusing existing route data");
+                    updatedTour.Distance = existing.Distance;
+                    updatedTour.EstimatedTime = existing.EstimatedTime;
+                    updatedTour.Directions = existing.Directions;
+                    updatedTour.GeoJson = existing.GeoJson;
+                }
 
                 var tourEntity = _mapper.ToEntity(updatedTour);
                 var updatedEntity = await _tourRepository.UpdateTourAsync(tourEntity);
@@ -220,5 +244,15 @@ namespace TourPlanner.BLL.Services
             tour.Directions = routeInfo.Directions;
             tour.GeoJson = routeInfo.GeoJson;
         }
+
+        private static bool RouteInputsChanged(TourEntity existing, TourDomain updated) =>
+            !string.Equals(existing.From, updated.From, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(existing.To, updated.To, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(existing.TransportType, updated.TransportType, StringComparison.OrdinalIgnoreCase);
+
+        private static bool HasRouteData(TourEntity existing) =>
+            !string.IsNullOrEmpty(existing.GeoJson) &&
+            !string.IsNullOrEmpty(existing.Directions) &&
+            existing.Distance > 0;
     }
 }
