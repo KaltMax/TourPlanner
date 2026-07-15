@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Options;
 using TourPlanner.BLL.Configurations;
 using TourPlanner.BLL.DomainModels;
@@ -28,11 +29,16 @@ namespace TourPlanner.BLL.Services
             try
             {
                 var fromCoordinates = await GeocodeAsync(from);
-                var toCoordinates = await GeocodeAsync(to);
-
-                if (fromCoordinates == null || toCoordinates == null)
+                if (fromCoordinates == null)
                 {
-                    _logger.LogWarning($"Failed to geocode locations. From: '{from}', To: '{to}'");
+                    _logger.LogWarning($"Location could not be geocoded: '{from}'");
+                    throw new GeocodingException("One or both locations could not be geocoded.");
+                }
+
+                var toCoordinates = await GeocodeAsync(to);
+                if (toCoordinates == null)
+                {
+                    _logger.LogWarning($"Location could not be geocoded: '{to}'");
                     throw new GeocodingException("One or both locations could not be geocoded.");
                 }
 
@@ -59,38 +65,50 @@ namespace TourPlanner.BLL.Services
 
         private async Task<double[]?> GeocodeAsync(string location)
         {
+            var url = $"https://api.openrouteservice.org/geocode/search?api_key={_apiKey}&text={Uri.EscapeDataString(location)}";
+
+            HttpResponseMessage response;
             try
             {
-                var url = $"https://api.openrouteservice.org/geocode/search?api_key={_apiKey}&text={Uri.EscapeDataString(location)}";
-
-                var response = await _httpClient.GetAsync(url);
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogWarning($"Geocoding API returned status code {response.StatusCode} for '{location}'");
-                    return null;
-                }
-
-                var content = await response.Content.ReadAsStringAsync();
-                var json = JObject.Parse(content);
-                var coordinates = json["features"]?[0]?["geometry"]?["coordinates"];
-
-                if (coordinates == null || coordinates.Count() < 2)
-                {
-                    _logger.LogWarning($"No coordinates found in geocoding response for '{location}'");
-                    return null;
-                }
-
-                return new double[]
-                {
-                    coordinates?[0]?.Value<double>() ?? 0,
-                    coordinates?[1]?.Value<double>() ?? 0
-                };
+                response = await _httpClient.GetAsync(url);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
             {
-                _logger.LogError(ex, $"Error geocoding location '{location}'");
+                _logger.LogError(ex, $"Network error contacting the geocoding service for '{location}'");
+                throw new RoutingException($"Failed to reach the geocoding service for '{location}'.", ex);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"Geocoding API returned status code {response.StatusCode} for '{location}'");
+                throw new RoutingException($"Geocoding service returned status {(int)response.StatusCode} for '{location}'.");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            JObject json;
+            try
+            {
+                json = JObject.Parse(content);
+            }
+            catch (JsonReaderException ex)
+            {
+                _logger.LogError(ex, $"Invalid JSON received from the geocoding service for '{location}'");
+                throw new RoutingException($"Geocoding service returned an invalid response for '{location}'.", ex);
+            }
+
+            var coordinates = json["features"]?.FirstOrDefault()?["geometry"]?["coordinates"];
+            if (coordinates == null || coordinates.Count() < 2)
+            {
+                _logger.LogWarning($"No coordinates found in geocoding response for '{location}'");
                 return null;
             }
+
+            return
+            [
+                coordinates[0]?.Value<double>() ?? 0,
+                coordinates[1]?.Value<double>() ?? 0
+            ];
         }
 
         private async Task<RouteInfo> GetDirectionsAsync(double[] fromCoordinates, double[] toCoordinates, string transportType)
@@ -152,7 +170,6 @@ namespace TourPlanner.BLL.Services
             {
                 "car" => "driving-car",
                 "bike" => "cycling-regular",
-                "walking" => "foot-walking",
                 _ => "foot-walking"
             };
         }
