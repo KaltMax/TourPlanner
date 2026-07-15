@@ -41,7 +41,7 @@ namespace TourPlanner.BLL.Services
             }
         }
 
-        public async Task<TourDomain> AddTourAsync(TourDomain newTour)
+        public async Task<TourDomain> AddTourAsync(TourDomain newTour, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Adding new tour: {newTour.Name}");
 
@@ -58,7 +58,7 @@ namespace TourPlanner.BLL.Services
                     throw new TourNameAlreadyExistsException($"A tour with the name '{newTour.Name}' already exists.");
                 }
 
-                await FetchRouteDataAsync(newTour);
+                await FetchRouteDataAsync(newTour, cancellationToken);
 
                 var tourEntity = _mapper.ToEntity(newTour);
                 var savedEntity = await _tourRepository.AddTourAsync(tourEntity);
@@ -96,7 +96,7 @@ namespace TourPlanner.BLL.Services
             }
         }
 
-        public async Task<TourDomain> UpdateTourAsync(Guid id, TourDomain updatedTour)
+        public async Task<TourDomain> UpdateTourAsync(Guid id, TourDomain updatedTour, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Updating tour with ID: {id}");
 
@@ -110,7 +110,7 @@ namespace TourPlanner.BLL.Services
                     throw new TourNameAlreadyExistsException($"A tour with the name '{updatedTour.Name}' already exists.");
                 }
 
-                var routeInfo = await _routeService.GetRouteInfoAsync(updatedTour.From, updatedTour.To, updatedTour.TransportType);
+                var routeInfo = await _routeService.GetRouteInfoAsync(updatedTour.From, updatedTour.To, updatedTour.TransportType, cancellationToken);
                 updatedTour.Distance = routeInfo.Distance;
                 updatedTour.EstimatedTime = routeInfo.EstimatedTime;
                 updatedTour.Directions = routeInfo.Directions;
@@ -140,7 +140,7 @@ namespace TourPlanner.BLL.Services
             }
         }
 
-        public async Task<int> ImportToursAsync(IEnumerable<TourDomain> tours)
+        public async Task<int> ImportToursAsync(IEnumerable<TourDomain> tours, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Importing {tours.Count()} tours");
 
@@ -148,6 +148,10 @@ namespace TourPlanner.BLL.Services
 
             foreach (var tour in tours)
             {
+                // Honor cancellation between tours. Thrown outside the try so it aborts the
+                // whole import instead of being swallowed as a single failed tour.
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     // Skip if tour already exists by name
@@ -168,13 +172,18 @@ namespace TourPlanner.BLL.Services
                     }
 
                     // Ensure route data exists
-                    await EnsureRouteDataAsync(tour);
+                    await EnsureRouteDataAsync(tour, cancellationToken);
 
                     var tourEntity = _mapper.ToEntity(tour);
                     await _tourRepository.AddTourAsync(tourEntity);
 
                     importedCount++;
                     _logger.LogInformation($"Successfully imported tour: {tour.Name}");
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Cancellation must abort the import, not be swallowed like a per-tour failure.
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -187,7 +196,7 @@ namespace TourPlanner.BLL.Services
             return importedCount;
         }
 
-        private async Task EnsureRouteDataAsync(TourDomain tour)
+        private async Task EnsureRouteDataAsync(TourDomain tour, CancellationToken cancellationToken)
         {
             // Check if route data already exists (for imported tours)
             if (string.IsNullOrEmpty(tour.GeoJson) ||
@@ -195,7 +204,7 @@ namespace TourPlanner.BLL.Services
                 tour.Distance <= 0)
             {
                 _logger.LogDebug($"Route data missing for tour '{tour.Name}', fetching from routing service");
-                await FetchRouteDataAsync(tour);
+                await FetchRouteDataAsync(tour, cancellationToken);
             }
             else
             {
@@ -203,9 +212,9 @@ namespace TourPlanner.BLL.Services
             }
         }
 
-        private async Task FetchRouteDataAsync(TourDomain tour)
+        private async Task FetchRouteDataAsync(TourDomain tour, CancellationToken cancellationToken)
         {
-            var routeInfo = await _routeService.GetRouteInfoAsync(tour.From, tour.To, tour.TransportType);
+            var routeInfo = await _routeService.GetRouteInfoAsync(tour.From, tour.To, tour.TransportType, cancellationToken);
             tour.Distance = routeInfo.Distance;
             tour.EstimatedTime = routeInfo.EstimatedTime;
             tour.Directions = routeInfo.Directions;

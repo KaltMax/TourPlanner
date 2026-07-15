@@ -36,11 +36,11 @@ namespace TourPlanner.API.Controllers
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TourDomain>> Post([FromBody] TourDomain newTour)
+        public async Task<ActionResult<TourDomain>> Post([FromBody] TourDomain newTour, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation($"Creating new tour: {newTour.Name}");
 
-            var created = await _tourService.AddTourAsync(newTour);
+            var created = await _tourService.AddTourAsync(newTour, cancellationToken);
             _logger.LogInformation($"Successfully created tour with ID: {created.Id}");
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
@@ -71,11 +71,11 @@ namespace TourPlanner.API.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TourDomain>> Put(Guid id, [FromBody] TourDomain updatedTour)
+        public async Task<ActionResult<TourDomain>> Put(Guid id, [FromBody] TourDomain updatedTour, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Updating tour with ID: {id}");
 
-            var result = await _tourService.UpdateTourAsync(id, updatedTour);
+            var result = await _tourService.UpdateTourAsync(id, updatedTour, cancellationToken);
             _logger.LogInformation($"Successfully updated tour with ID: {id}");
             return Ok(result);
         }
@@ -84,11 +84,11 @@ namespace TourPlanner.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ImportTours([FromBody] List<TourDomain> tours)
+        public async Task<IActionResult> ImportTours([FromBody] List<TourDomain> tours, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation($"Importing {tours.Count} tours");
 
-            var importedCount = await _tourService.ImportToursAsync(tours);
+            var importedCount = await _tourService.ImportToursAsync(tours, cancellationToken);
             _logger.LogInformation($"Import completed: {importedCount} tours imported");
             return Ok(new { ImportedCount = importedCount });
         }

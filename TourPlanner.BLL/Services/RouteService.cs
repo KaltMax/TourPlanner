@@ -19,7 +19,7 @@ namespace TourPlanner.BLL.Services
             _logger = logger;
         }
 
-        public async Task<RouteInfo> GetRouteInfoAsync(string from, string to, string transportType)
+        public async Task<RouteInfo> GetRouteInfoAsync(string from, string to, string transportType, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Getting route from '{from}' to '{to}' using {transportType}");
 
@@ -27,21 +27,21 @@ namespace TourPlanner.BLL.Services
             {
                 transportType = MapTransportType(transportType);
 
-                var fromCoordinates = await GeocodeAsync(from);
+                var fromCoordinates = await GeocodeAsync(from, cancellationToken);
                 if (fromCoordinates == null)
                 {
                     _logger.LogWarning($"Location could not be geocoded: '{from}'");
                     throw new GeocodingException("One or both locations could not be geocoded.");
                 }
 
-                var toCoordinates = await GeocodeAsync(to);
+                var toCoordinates = await GeocodeAsync(to, cancellationToken);
                 if (toCoordinates == null)
                 {
                     _logger.LogWarning($"Location could not be geocoded: '{to}'");
                     throw new GeocodingException("One or both locations could not be geocoded.");
                 }
 
-                var route = await GetDirectionsAsync(fromCoordinates, toCoordinates, transportType);
+                var route = await GetDirectionsAsync(fromCoordinates, toCoordinates, transportType, cancellationToken);
 
                 _logger.LogInformation($"Route calculated: {route.Distance:F2}km, {route.EstimatedTime:F0}min");
 
@@ -59,6 +59,11 @@ namespace TourPlanner.BLL.Services
             {
                 throw;
             }
+            catch (OperationCanceledException)
+            {
+                // The caller cancelled
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Unexpected error getting route from '{from}' to '{to}'");
@@ -66,14 +71,19 @@ namespace TourPlanner.BLL.Services
             }
         }
 
-        private async Task<double[]?> GeocodeAsync(string location)
+        private async Task<double[]?> GeocodeAsync(string location, CancellationToken cancellationToken)
         {
             var url = $"geocode/search?text={Uri.EscapeDataString(location)}";
 
             HttpResponseMessage response;
             try
             {
-                response = await _httpClient.GetAsync(url);
+                response = await _httpClient.GetAsync(url, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Genuine caller cancellation (not an HttpClient timeout)
+                throw;
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
             {
@@ -91,7 +101,7 @@ namespace TourPlanner.BLL.Services
                 throw new RoutingException($"Geocoding service returned status {(int)response.StatusCode} for '{location}'.");
             }
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             OrsGeocodeResponse? geocode;
             try
@@ -116,7 +126,7 @@ namespace TourPlanner.BLL.Services
             return [coordinates[0], coordinates[1]];
         }
 
-        private async Task<RouteInfo> GetDirectionsAsync(double[] fromCoordinates, double[] toCoordinates, string transportType)
+        private async Task<RouteInfo> GetDirectionsAsync(double[] fromCoordinates, double[] toCoordinates, string transportType, CancellationToken cancellationToken)
         {
             var fromLon = fromCoordinates[0].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var fromLat = fromCoordinates[1].ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -128,8 +138,8 @@ namespace TourPlanner.BLL.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
-                var response = await _httpClient.SendAsync(request);
-                var content = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -155,6 +165,11 @@ namespace TourPlanner.BLL.Services
             }
             catch (RoutingException)
             {
+                throw;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Genuine caller cancellation (not an HttpClient timeout)
                 throw;
             }
             catch (Exception ex)
