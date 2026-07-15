@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using TourPlanner.BLL.Configurations;
 using TourPlanner.BLL.DomainModels;
 using TourPlanner.BLL.Interfaces;
 using TourPlanner.BLL.Exceptions;
@@ -13,13 +11,11 @@ namespace TourPlanner.BLL.Services
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
         private readonly ILoggerWrapper<RouteService> _logger;
 
-        public RouteService(HttpClient httpClient, IOptions<OpenRouteServiceOptions> options, ILoggerWrapper<RouteService> logger)
+        public RouteService(HttpClient httpClient, ILoggerWrapper<RouteService> logger)
         {
             _httpClient = httpClient;
-            _apiKey = options.Value.ApiKey;
             _logger = logger;
         }
 
@@ -66,7 +62,7 @@ namespace TourPlanner.BLL.Services
 
         private async Task<double[]?> GeocodeAsync(string location)
         {
-            var url = $"https://api.openrouteservice.org/geocode/search?api_key={_apiKey}&text={Uri.EscapeDataString(location)}";
+            var url = $"https://api.openrouteservice.org/geocode/search?text={Uri.EscapeDataString(location)}";
 
             HttpResponseMessage response;
             try
@@ -123,7 +119,7 @@ namespace TourPlanner.BLL.Services
             var toLon = toCoordinates[0].ToString(System.Globalization.CultureInfo.InvariantCulture);
             var toLat = toCoordinates[1].ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            var url = $"https://api.openrouteservice.org/v2/directions/{profile}?api_key={_apiKey}&start={fromLon},{fromLat}&end={toLon},{toLat}";
+            var url = $"https://api.openrouteservice.org/v2/directions/{profile}?start={fromLon},{fromLat}&end={toLon},{toLat}";
 
             try
             {

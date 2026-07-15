@@ -1,8 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using NSubstitute;
+﻿using NSubstitute;
 using System.Net;
 using System.Text;
-using TourPlanner.BLL.Configurations;
 using TourPlanner.BLL.Exceptions;
 using TourPlanner.BLL.Services;
 using TourPlanner.BLL.Interfaces;
@@ -14,26 +12,22 @@ namespace TourPlanner.Test.BLL
     public class RouteServiceTests
     {
         private ILoggerWrapper<RouteService> _logger;
-        private IOptions<OpenRouteServiceOptions> _options;
         private IRouteService _routeService;
         private MockHttpMessageHandler _mockHttpHandler;
         private HttpClient _httpClient;
-        private const string TestApiKey = "test-api-key";
 
         [SetUp]
         public void Setup()
         {
             // Initialize mocks
             _logger = Substitute.For<ILoggerWrapper<RouteService>>();
-            _options = Substitute.For<IOptions<OpenRouteServiceOptions>>();
-            _options.Value.Returns(new OpenRouteServiceOptions { ApiKey = TestApiKey });
 
             // Initialize mock HTTP handler
             _mockHttpHandler = new MockHttpMessageHandler();
             _httpClient = new HttpClient(_mockHttpHandler);
 
             // Create service with mocked dependencies
-            _routeService = new RouteService(_httpClient, _options, _logger);
+            _routeService = new RouteService(_httpClient, _logger);
         }
 
         [TearDown]
@@ -54,18 +48,18 @@ namespace TourPlanner.Test.BLL
 
             // Mock geocoding responses
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Salzburg",
+                $"https://api.openrouteservice.org/geocode/search?text=Salzburg",
                 """{"features":[{"geometry":{"coordinates":[13.055,47.8095]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock directions response
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/v2/directions/driving-car?api_key={TestApiKey}&start=16.3725,48.2082&end=13.055,47.8095",
+                $"https://api.openrouteservice.org/v2/directions/driving-car?start=16.3725,48.2082&end=13.055,47.8095",
                 """{"features":[{"properties":{"summary":{"distance":300000,"duration":10800},"segments":[{"steps":[{"instruction":"Turn right","name":"Street","distance":1000,"duration":60}]}]}}]}""",
                 HttpStatusCode.OK);
 
@@ -90,7 +84,7 @@ namespace TourPlanner.Test.BLL
 
             // Mock empty response for "from" location
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=InvalidLocation",
+                $"https://api.openrouteservice.org/geocode/search?text=InvalidLocation",
                 """{"features":[]}""",
                 HttpStatusCode.OK);
 
@@ -111,13 +105,13 @@ namespace TourPlanner.Test.BLL
 
             // Mock successful "from" geocoding
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock empty response for "to" location
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=InvalidLocation",
+                $"https://api.openrouteservice.org/geocode/search?text=InvalidLocation",
                 """{"features":[]}""",
                 HttpStatusCode.OK);
 
@@ -138,18 +132,18 @@ namespace TourPlanner.Test.BLL
 
             // Mock successful geocoding responses
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Salzburg",
+                $"https://api.openrouteservice.org/geocode/search?text=Salzburg",
                 """{"features":[{"geometry":{"coordinates":[13.055,47.8095]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock failed directions API
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/v2/directions/driving-car?api_key={TestApiKey}&start=16.3725,48.2082&end=13.055,47.8095",
+                $"https://api.openrouteservice.org/v2/directions/driving-car?start=16.3725,48.2082&end=13.055,47.8095",
                 """{"error":"No route found"}""",
                 HttpStatusCode.BadRequest);
 
@@ -170,19 +164,19 @@ namespace TourPlanner.Test.BLL
 
             // Mock successful geocoding responses
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock successful geocoding for "to" location
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Salzburg",
+                $"https://api.openrouteservice.org/geocode/search?text=Salzburg",
                 """{"features":[{"geometry":{"coordinates":[13.055,47.8095]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock directions API with invalid/incomplete response
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/v2/directions/driving-car?api_key={TestApiKey}&start=16.3725,48.2082&end=13.055,47.8095",
+                $"https://api.openrouteservice.org/v2/directions/driving-car?start=16.3725,48.2082&end=13.055,47.8095",
                 """{"features":[{"properties":{"nosummary":"missing data"}}]}""",
                 HttpStatusCode.OK);
 
@@ -203,18 +197,18 @@ namespace TourPlanner.Test.BLL
 
             // Mock geocoding responses
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Salzburg",
+                $"https://api.openrouteservice.org/geocode/search?text=Salzburg",
                 """{"features":[{"geometry":{"coordinates":[13.055,47.8095]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock directions with expected transport type in URL
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/v2/directions/driving-car?api_key={TestApiKey}&start=16.3725,48.2082&end=13.055,47.8095",
+                $"https://api.openrouteservice.org/v2/directions/driving-car?start=16.3725,48.2082&end=13.055,47.8095",
                 """{"features":[{"properties":{"summary":{"distance":300000,"duration":10800},"segments":[{"steps":[{"instruction":"Turn right","name":"Street","distance":1000,"duration":60}]}]}}]}""",
                 HttpStatusCode.OK);
 
@@ -234,18 +228,18 @@ namespace TourPlanner.Test.BLL
 
             // Mock geocoding responses
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"features":[{"geometry":{"coordinates":[16.3725,48.2082]}}]}""",
                 HttpStatusCode.OK);
 
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Salzburg",
+                $"https://api.openrouteservice.org/geocode/search?text=Salzburg",
                 """{"features":[{"geometry":{"coordinates":[13.055,47.8095]}}]}""",
                 HttpStatusCode.OK);
 
             // Mock directions with expected transport type in URL
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/v2/directions/cycling-regular?api_key={TestApiKey}&start=16.3725,48.2082&end=13.055,47.8095",
+                $"https://api.openrouteservice.org/v2/directions/cycling-regular?start=16.3725,48.2082&end=13.055,47.8095",
                 """{"features":[{"properties":{"summary":{"distance":300000,"duration":10800},"segments":[{"steps":[{"instruction":"Turn right","name":"Street","distance":1000,"duration":60}]}]}}]}""",
                 HttpStatusCode.OK);
 
@@ -264,7 +258,7 @@ namespace TourPlanner.Test.BLL
             const string transportType = "Car";
 
             _mockHttpHandler.SetResponse(
-                $"https://api.openrouteservice.org/geocode/search?api_key={TestApiKey}&text=Vienna",
+                $"https://api.openrouteservice.org/geocode/search?text=Vienna",
                 """{"error":"Invalid API key"}""",
                 HttpStatusCode.Unauthorized);
 
