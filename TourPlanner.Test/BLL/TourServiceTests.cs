@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using TourPlanner.BLL.DomainModels;
 using TourPlanner.BLL.Exceptions;
@@ -64,14 +64,14 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void GetAllToursAsync_ShouldPropagateException_WhenRepositoryThrows()
+        public async Task GetAllToursAsync_ShouldPropagateException_WhenRepositoryThrows()
         {
             // Arrange
             var expectedException = new Exception("Repository error");
             _tourRepository.GetAllToursAsync().Throws(expectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<Exception>(() => _tourService.GetAllToursAsync());
+            var ex = await Assert.ThrowsAsync<Exception>(() => _tourService.GetAllToursAsync());
             Assert.That(ex, Is.SameAs(expectedException));
         }
 
@@ -195,7 +195,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void AddTourAsync_ShouldThrowTourNameAlreadyExistsException_WhenNameExists()
+        public async Task AddTourAsync_ShouldThrowTourNameAlreadyExistsException_WhenNameExists()
         {
             // Arrange
             var newTour = new TourDomain
@@ -211,19 +211,19 @@ namespace TourPlanner.Test.BLL
             _tourRepository.TourNameExistsAsync(newTour.Name, newTour.Id).Returns(true);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourNameAlreadyExistsException>(() => _tourService.AddTourAsync(newTour));
+            var ex = await Assert.ThrowsAsync<TourNameAlreadyExistsException>(() => _tourService.AddTourAsync(newTour));
 
             Assert.That(ex.Message, Is.EqualTo($"A tour with the name '{newTour.Name}' already exists."));
 
             // Verify the repository was called with correct parameters
-            _tourRepository.Received(1).TourNameExistsAsync(newTour.Name, newTour.Id);
+            await _tourRepository.Received(1).TourNameExistsAsync(newTour.Name, newTour.Id);
 
             // Verify that routing service was never called (early return)
-            _routeService.DidNotReceive().GetRouteInfoAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+            await _routeService.DidNotReceive().GetRouteInfoAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
         }
 
         [Test]
-        public void AddTourAsync_ShouldPropagateRoutingException_WhenRoutingFails()
+        public async Task AddTourAsync_ShouldPropagateRoutingException_WhenRoutingFails()
         {
             // Arrange
             var newTour = new TourDomain
@@ -239,12 +239,12 @@ namespace TourPlanner.Test.BLL
             _routeService.GetRouteInfoAsync(newTour.From, newTour.To, newTour.TransportType).Throws(routingException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<RoutingException>(() => _tourService.AddTourAsync(newTour));
+            var ex = await Assert.ThrowsAsync<RoutingException>(() => _tourService.AddTourAsync(newTour));
             Assert.That(ex, Is.SameAs(routingException));
         }
 
         [Test]
-        public void AddTourAsync_ShouldWrappRepositoryException_WhenRepositoryFails()
+        public async Task AddTourAsync_ShouldWrappRepositoryException_WhenRepositoryFails()
         {
             // Arrange
             var newTour = new TourDomain
@@ -274,7 +274,7 @@ namespace TourPlanner.Test.BLL
             _tourRepository.AddTourAsync(Arg.Any<TourEntity>()).Throws(repositoryException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceException>(() => _tourService.AddTourAsync(newTour));
+            var ex = await Assert.ThrowsAsync<TourServiceException>(() => _tourService.AddTourAsync(newTour));
             Assert.That(ex.Message, Is.EqualTo("Failed to add the tour"));
             Assert.That(ex.InnerException, Is.SameAs(repositoryException));
         }
@@ -310,7 +310,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void DeleteTourAsync_ShouldWrapRepositoryException_WhenRepositoryFails()
+        public async Task DeleteTourAsync_ShouldWrapRepositoryException_WhenRepositoryFails()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -318,7 +318,7 @@ namespace TourPlanner.Test.BLL
             _tourRepository.DeleteTourAsync(tourId).Throws(repositoryException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceException>(() => _tourService.DeleteTourAsync(tourId));
+            var ex = await Assert.ThrowsAsync<TourServiceException>(() => _tourService.DeleteTourAsync(tourId));
             Assert.That(ex.Message, Is.EqualTo($"Failed to delete tour with ID {tourId}."));
             Assert.That(ex.InnerException, Is.SameAs(repositoryException));
         }
@@ -508,7 +508,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldPropagateRoutingException_WhenRoutingFails()
+        public async Task UpdateTourAsync_ShouldPropagateRoutingException_WhenRoutingFails()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -537,12 +537,12 @@ namespace TourPlanner.Test.BLL
                 .Throws(routingException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<RoutingException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
+            var ex = await Assert.ThrowsAsync<RoutingException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
             Assert.That(ex, Is.SameAs(routingException));
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldThrowNotFoundException_WhenTourDoesNotExist()
+        public async Task UpdateTourAsync_ShouldThrowNotFoundException_WhenTourDoesNotExist()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -557,16 +557,16 @@ namespace TourPlanner.Test.BLL
             _tourRepository.GetTourByIdAsync(tourId).Returns((TourEntity?)null);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceNotFoundException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
+            var ex = await Assert.ThrowsAsync<TourServiceNotFoundException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
             Assert.That(ex.Message, Is.EqualTo($"Tour with ID {tourId} not found."));
 
             // The routing provider must not be contacted for a tour that does not exist.
-            _routeService.DidNotReceive().GetRouteInfoAsync(
+            await _routeService.DidNotReceive().GetRouteInfoAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldWrapNotFoundException_WhenRepositoryThrowsNotFound()
+        public async Task UpdateTourAsync_ShouldWrapNotFoundException_WhenRepositoryThrowsNotFound()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -608,13 +608,13 @@ namespace TourPlanner.Test.BLL
             _tourRepository.UpdateTourAsync(Arg.Any<TourEntity>()).Throws(notFoundException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceNotFoundException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
+            var ex = await Assert.ThrowsAsync<TourServiceNotFoundException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
             Assert.That(ex.Message, Is.EqualTo($"Tour with ID {tourId} not found."));
             Assert.That(ex.InnerException, Is.SameAs(notFoundException));
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldWrapRepositoryException_WhenRepositoryFails()
+        public async Task UpdateTourAsync_ShouldWrapRepositoryException_WhenRepositoryFails()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -655,13 +655,13 @@ namespace TourPlanner.Test.BLL
             _tourRepository.UpdateTourAsync(Arg.Any<TourEntity>()).Throws(repositoryException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
+            var ex = await Assert.ThrowsAsync<TourServiceException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
             Assert.That(ex.Message, Is.EqualTo($"Error updating tour with ID {tourId}."));
             Assert.That(ex.InnerException, Is.SameAs(repositoryException));
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldThrowTourNameAlreadyExistsException_WhenNameExists()
+        public async Task UpdateTourAsync_ShouldThrowTourNameAlreadyExistsException_WhenNameExists()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -677,15 +677,15 @@ namespace TourPlanner.Test.BLL
             _tourRepository.TourNameExistsAsync(updatedTour.Name, tourId).Returns(true);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourNameAlreadyExistsException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
+            var ex = await Assert.ThrowsAsync<TourNameAlreadyExistsException>(() => _tourService.UpdateTourAsync(tourId, updatedTour));
 
             Assert.That(ex.Message, Is.EqualTo($"A tour with the name '{updatedTour.Name}' already exists."));
 
             // Verify repository was called with correct parameters including tourId
-            _tourRepository.Received(1).TourNameExistsAsync(updatedTour.Name, tourId);
+            await _tourRepository.Received(1).TourNameExistsAsync(updatedTour.Name, tourId);
 
             // Verify that routing service was never called (early return)
-            _routeService.DidNotReceive().GetRouteInfoAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+            await _routeService.DidNotReceive().GetRouteInfoAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
         }
     }
 }

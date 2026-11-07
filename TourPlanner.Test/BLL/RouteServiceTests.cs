@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+using NSubstitute;
 using System.Net;
 using System.Text;
 using TourPlanner.BLL.Exceptions;
@@ -79,7 +79,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowGeocodingException_WhenFromLocationCannotBeGeocoded()
+        public async Task GetRouteInfoAsync_ShouldThrowGeocodingException_WhenFromLocationCannotBeGeocoded()
         {
             // Arrange
             string from = "InvalidLocation";
@@ -93,14 +93,14 @@ namespace TourPlanner.Test.BLL
                 HttpStatusCode.OK);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<GeocodingException>(() =>
+            var ex = await Assert.ThrowsAsync<GeocodingException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("locations could not be geocoded"));
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowGeocodingException_WhenToLocationCannotBeGeocoded()
+        public async Task GetRouteInfoAsync_ShouldThrowGeocodingException_WhenToLocationCannotBeGeocoded()
         {
             // Arrange
             const string from = "Vienna";
@@ -120,14 +120,14 @@ namespace TourPlanner.Test.BLL
                 HttpStatusCode.OK);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<GeocodingException>(() =>
+            var ex = await Assert.ThrowsAsync<GeocodingException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("locations could not be geocoded"));
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowRoutingException_WhenDirectionsAPIFails()
+        public async Task GetRouteInfoAsync_ShouldThrowRoutingException_WhenDirectionsAPIFails()
         {
             // Arrange
             const string from = "Vienna";
@@ -152,14 +152,14 @@ namespace TourPlanner.Test.BLL
                 HttpStatusCode.BadRequest);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<RoutingException>(() =>
+            var ex = await Assert.ThrowsAsync<RoutingException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("Routing API returned error"));
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowRoutingException_WhenDirectionsAPIMissingSummary()
+        public async Task GetRouteInfoAsync_ShouldThrowRoutingException_WhenDirectionsAPIMissingSummary()
         {
             // Arrange
             const string from = "Vienna";
@@ -185,7 +185,7 @@ namespace TourPlanner.Test.BLL
                 HttpStatusCode.OK);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<RoutingException>(() =>
+            var ex = await Assert.ThrowsAsync<RoutingException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("did not contain a valid route summary"));
@@ -254,7 +254,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowUnsupportedTransportTypeException_ForInvalidTransportType()
+        public async Task GetRouteInfoAsync_ShouldThrowUnsupportedTransportTypeException_ForInvalidTransportType()
         {
             // Arrange
             const string from = "Vienna";
@@ -262,14 +262,14 @@ namespace TourPlanner.Test.BLL
             const string transportType = "Plane"; // Invalid transport type
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<UnsupportedTransportTypeException>(() =>
+            var ex = await Assert.ThrowsAsync<UnsupportedTransportTypeException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("Unsupported transport type"));
         }
 
         [Test]
-        public void GetRouteInfoAsync_ShouldThrowRoutingException_WhenGeocodingAPIReturnsErrorStatus()
+        public async Task GetRouteInfoAsync_ShouldThrowRoutingException_WhenGeocodingAPIReturnsErrorStatus()
         {
             // Arrange
             const string from = "Vienna";
@@ -282,7 +282,7 @@ namespace TourPlanner.Test.BLL
                 HttpStatusCode.Unauthorized);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<RoutingException>(() =>
+            var ex = await Assert.ThrowsAsync<RoutingException>(() =>
                 _routeService.GetRouteInfoAsync(from, to, transportType));
 
             Assert.That(ex.Message, Does.Contain("Geocoding service returned status 401"));
