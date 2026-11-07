@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using TourPlanner.BLL.DomainModels;
 using TourPlanner.BLL.Exceptions;
@@ -89,7 +89,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void GetTourLogByIdAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
+        public async Task GetTourLogByIdAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -97,13 +97,13 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.GetTourLogByIdAsync(logId).Throws(repoException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.GetTourLogByIdAsync(logId));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.GetTourLogByIdAsync(logId));
             Assert.That(ex.Message, Is.EqualTo($"Failed to retrieve tour log with ID {logId}"));
             Assert.That(ex.InnerException, Is.SameAs(repoException));
         }
 
         [Test]
-        public void GetTourLogByIdAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
+        public async Task GetTourLogByIdAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -111,7 +111,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.GetTourLogByIdAsync(logId).Throws(unexpectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.GetTourLogByIdAsync(logId));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.GetTourLogByIdAsync(logId));
             Assert.That(ex.Message, Is.EqualTo($"Unexpected error retrieving tour log with ID {logId}"));
             Assert.That(ex.InnerException, Is.SameAs(unexpectedException));
         }
@@ -216,7 +216,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void AddLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
+        public async Task AddLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -233,13 +233,13 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.AddLogAsync(Arg.Any<TourLogEntity>()).Throws(repoException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.AddLogAsync(newTourLog));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.AddLogAsync(newTourLog));
             Assert.That(ex.Message, Is.EqualTo($"Failed to create tour log with ID {newTourLog.Id}"));
             Assert.That(ex.InnerException, Is.SameAs(repoException));
         }
 
         [Test]
-        public void AddLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
+        public async Task AddLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -256,7 +256,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.AddLogAsync(Arg.Any<TourLogEntity>()).Throws(unexpectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.AddLogAsync(newTourLog));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.AddLogAsync(newTourLog));
             Assert.That(ex.Message, Is.EqualTo("Unexpected error creating tour log"));
             Assert.That(ex.InnerException, Is.SameAs(unexpectedException));
         }
@@ -292,7 +292,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void DeleteLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
+        public async Task DeleteLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -300,13 +300,13 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.DeleteLogAsync(logId).Throws(repoException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.DeleteLogAsync(logId));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.DeleteLogAsync(logId));
             Assert.That(ex.Message, Is.EqualTo($"Failed to delete tour log with ID {logId}"));
             Assert.That(ex.InnerException, Is.SameAs(repoException));
         }
 
         [Test]
-        public void DeleteLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
+        public async Task DeleteLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -314,7 +314,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.DeleteLogAsync(logId).Throws(unexpectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.DeleteLogAsync(logId));
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() => _tourLogService.DeleteLogAsync(logId));
             Assert.That(ex.Message, Is.EqualTo($"Unexpected error deleting tour log with ID {logId}"));
             Assert.That(ex.InnerException, Is.SameAs(unexpectedException));
         }
@@ -391,7 +391,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void UpdateTourLogAsync_ShouldThrowTourLogServiceNotFoundException_WhenTourLogNotFound()
+        public async Task UpdateTourLogAsync_ShouldThrowTourLogServiceNotFoundException_WhenTourLogNotFound()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -406,7 +406,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.UpdateTourLogAsync(Arg.Any<TourLogEntity>()).Throws(notFoundException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceNotFoundException>(() =>
+            var ex = await Assert.ThrowsAsync<TourLogServiceNotFoundException>(() =>
                 _tourLogService.UpdateTourLogAsync(logId, updatedTourLog));
 
             Assert.That(ex.Message, Is.EqualTo($"TourLog with ID {logId} not found."));
@@ -414,7 +414,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void UpdateTourLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
+        public async Task UpdateTourLogAsync_ShouldThrowTourLogServiceException_WhenRepositoryThrowsException()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -429,7 +429,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.UpdateTourLogAsync(Arg.Any<TourLogEntity>()).Throws(repoException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() =>
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() =>
                 _tourLogService.UpdateTourLogAsync(logId, updatedTourLog));
 
             Assert.That(ex.Message, Is.EqualTo($"Error occurred while updating the TourLog with ID {logId}."));
@@ -437,7 +437,7 @@ namespace TourPlanner.Test.BLL
         }
 
         [Test]
-        public void UpdateTourLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
+        public async Task UpdateTourLogAsync_ShouldThrowTourLogServiceException_WhenUnexpectedExceptionOccurs()
         {
             // Arrange
             var logId = Guid.NewGuid();
@@ -452,7 +452,7 @@ namespace TourPlanner.Test.BLL
             _tourLogRepository.UpdateTourLogAsync(Arg.Any<TourLogEntity>()).Throws(unexpectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourLogServiceException>(() =>
+            var ex = await Assert.ThrowsAsync<TourLogServiceException>(() =>
                 _tourLogService.UpdateTourLogAsync(logId, updatedTourLog));
 
             Assert.That(ex.Message, Is.EqualTo($"Unexpected error updating tour log with ID {logId}"));

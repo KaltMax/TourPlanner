@@ -65,14 +65,14 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public void Get_PropagatesException_WhenServiceThrows()
+        public async Task Get_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var expectedException = new Exception("Test exception");
             _mockTourService.GetAllToursAsync().Throws(expectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<Exception>(() => _controller.Get());
+            var ex = await Assert.ThrowsAsync<Exception>(() => _controller.Get());
             Assert.That(ex, Is.SameAs(expectedException));
         }
 
@@ -118,7 +118,7 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public void Post_PropagatesException_WhenServiceThrows()
+        public async Task Post_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var request = new TourRequest { Name = "Test Tour" };
@@ -126,7 +126,7 @@ namespace TourPlanner.Test.API
             _mockTourService.AddTourAsync(Arg.Any<TourDomain>(), Arg.Any<CancellationToken>()).Throws(expectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceException>(() => _controller.Post(request));
+            var ex = await Assert.ThrowsAsync<TourServiceException>(() => _controller.Post(request));
             Assert.That(ex, Is.SameAs(expectedException));
         }
 
@@ -161,7 +161,7 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public void Delete_PropagatesException_WhenServiceThrows()
+        public async Task Delete_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -169,7 +169,7 @@ namespace TourPlanner.Test.API
             _mockTourService.DeleteTourAsync(tourId).Throws(expectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceException>(() => _controller.Delete(tourId));
+            var ex = await Assert.ThrowsAsync<TourServiceException>(() => _controller.Delete(tourId));
             Assert.That(ex, Is.SameAs(expectedException));
         }
 
@@ -213,7 +213,7 @@ namespace TourPlanner.Test.API
         }
 
         [Test]
-        public void Put_PropagatesException_WhenServiceThrows()
+        public async Task Put_PropagatesException_WhenServiceThrows()
         {
             // Arrange
             var tourId = Guid.NewGuid();
@@ -222,7 +222,7 @@ namespace TourPlanner.Test.API
             _mockTourService.UpdateTourAsync(tourId, Arg.Any<TourDomain>(), Arg.Any<CancellationToken>()).Throws(expectedException);
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourServiceNotFoundException>(() => _controller.Put(tourId, request));
+            var ex = await Assert.ThrowsAsync<TourServiceNotFoundException>(() => _controller.Put(tourId, request));
             Assert.That(ex, Is.SameAs(expectedException));
         }
 

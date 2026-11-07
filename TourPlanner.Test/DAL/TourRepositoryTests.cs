@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using TourPlanner.DAL.Context;
 using TourPlanner.DAL.Entities;
@@ -173,7 +173,7 @@ namespace TourPlanner.Test.DAL
         }
 
         [Test]
-        public void UpdateTourAsync_ShouldThrowTourNotFoundException_WhenTourDoesNotExist()
+        public async Task UpdateTourAsync_ShouldThrowTourNotFoundException_WhenTourDoesNotExist()
         {
             // Arrange
             var nonExistentId = Guid.NewGuid();
@@ -192,7 +192,7 @@ namespace TourPlanner.Test.DAL
             };
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<TourNotFoundException>(async () => await _repository.UpdateTourAsync(tour));
+            var ex = await Assert.ThrowsAsync<TourNotFoundException>(async () => await _repository.UpdateTourAsync(tour));
             Assert.That(ex.Message, Does.Contain(nonExistentId.ToString()));
         }
 
