@@ -1,13 +1,20 @@
-﻿using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using System.IO;
+using System.Reflection;
 using TourPlanner.UI.Services.Interfaces;
 
 namespace TourPlanner.UI.Services
 {
     public class MapService : IMapService
     {
+        private const string WebViewNotInitializedMessage = "WebView2 is not initialized";
+        private const string OsmTileFilter = "https://tile.openstreetmap.org/*";
+        private static readonly string AppUserAgent =
+            $"TourPlanner/{Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
+
         private WebView2? _webView;
+        private CoreWebView2? _configuredCore;
 
         public bool IsInitialized => _webView != null && _webView.CoreWebView2 != null;
 
@@ -23,15 +30,36 @@ namespace TourPlanner.UI.Services
                 throw new InvalidOperationException("WebView must be registered before initialization");
             }
 
+            ConfigureTileRequests();
             DisplayNoTourSelectedMessage();
             return Task.CompletedTask;
+        }
+
+        private void ConfigureTileRequests()
+        {
+            var core = _webView?.CoreWebView2;
+
+            // Initialization can run more than once (e.g. repeated Loaded events) - only subscribe once per core
+            if (core == null || ReferenceEquals(core, _configuredCore))
+            {
+                return;
+            }
+
+            core.AddWebResourceRequestedFilter(OsmTileFilter, CoreWebView2WebResourceContext.Image);
+            core.WebResourceRequested += OnWebResourceRequested;
+            _configuredCore = core;
+        }
+
+        private static void OnWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            e.Request.Headers.SetHeader("User-Agent", AppUserAgent);
         }
 
         public async Task LoadGeoJsonMapAsync(string geoJson)
         {
             if (!IsInitialized || _webView?.CoreWebView2 == null)
             {
-                throw new InvalidOperationException("WebView2 is not initialized");
+                throw new InvalidOperationException(WebViewNotInitializedMessage);
             }
 
             var htmlTemplatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Views", "Leaflet.html");
@@ -50,7 +78,7 @@ namespace TourPlanner.UI.Services
         {
             if (!IsInitialized || _webView?.CoreWebView2 == null)
             {
-                throw new InvalidOperationException("WebView2 is not initialized");
+                throw new InvalidOperationException(WebViewNotInitializedMessage);
             }
 
             DisplayNoTourSelectedMessage();
@@ -62,7 +90,7 @@ namespace TourPlanner.UI.Services
         {
             if (!IsInitialized || _webView?.CoreWebView2 == null)
             {
-                throw new InvalidOperationException("WebView2 is not initialized");
+                throw new InvalidOperationException(WebViewNotInitializedMessage);
             }
 
             var screenshotStream = new MemoryStream();
@@ -80,7 +108,7 @@ namespace TourPlanner.UI.Services
         {
             if (_webView == null || _webView.CoreWebView2 == null)
             {
-                throw new InvalidOperationException("WebView2 is not initialized");
+                throw new InvalidOperationException(WebViewNotInitializedMessage);
             }
 
             _webView.CoreWebView2.NavigateToString(
